@@ -5,33 +5,107 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>CYZGO 代购系统</title>
 <style>
-body{font-family:sans-serif;background:#f0f4f8;margin:0;padding:16px;}
-h1,h2{color:#111;text-align:center;}
-.card{background:#fff;padding:16px;margin:12px 0;border-radius:12px;box-shadow:0 4px 16px rgba(0,0,0,0.1);}
-input,select,button{width:100%;padding:10px;margin:6px 0;border-radius:8px;border:1px solid #ccc;}
-button{background:#2563eb;color:#fff;font-weight:600;cursor:pointer;}
-button:hover{transform:scale(1.05);}
-#orderResult{display:none;}
+body{
+    font-family:'Segoe UI', sans-serif;
+    background:#f5f7fa;
+    margin:0;
+    padding:16px;
+    color:#111;
+}
+h1,h2{text-align:center;color:#1f2937;margin-bottom:12px;}
+.card{
+    background:#fff;
+    padding:20px;
+    margin:20px auto;
+    border-radius:16px;
+    max-width:480px;
+    box-shadow:0 8px 24px rgba(0,0,0,0.12);
+}
+input, select{
+    width:100%;
+    padding:12px;
+    margin:8px 0;
+    border-radius:10px;
+    border:1px solid #d1d5db;
+    font-size:16px;
+    transition:all 0.2s;
+}
+input:focus, select:focus{
+    outline:none;
+    border-color:#2563eb;
+    box-shadow:0 0 6px rgba(37,99,235,0.3);
+}
+button{
+    width:100%;
+    padding:14px;
+    margin-top:12px;
+    border:none;
+    border-radius:12px;
+    background:linear-gradient(90deg,#2563eb,#3b82f6);
+    color:#fff;
+    font-size:18px;
+    font-weight:600;
+    cursor:pointer;
+    transition:transform 0.2s, box-shadow 0.2s;
+}
+button:hover{
+    transform:scale(1.03);
+    box-shadow:0 6px 20px rgba(37,99,235,0.3);
+}
+#orderResult{display:none;line-height:1.6;}
+#orderResult h2{color:#2563eb;}
+#orderResult p{margin:6px 0;}
+a{color:#2563eb;text-decoration:none;}
+a:hover{text-decoration:underline;}
 </style>
 </head>
 <body>
 
 <h1>CYZGO 代购系统 / CYZGO Shopping / CYZGO Худалдаа</h1>
 
+<!-- 客服信息 -->
 <div class="card">
-<h2>提交订单 / Submit Order / Захиалга</h2>
+<h2>联系客服 / Contact / Холбоо барих</h2>
+<p>Telegram: <a href=" " target="_blank">@cyzgoshoping</a ></p >
+<p>Username: @cyzgo</p >
+</div>
+
+<!-- 下单表单 -->
+<div class="card">
+<h2>立即下单 / Submit Order / Илгээх Захиалга</h2>
 <form id="orderForm">
 <label>商品链接 / Product Link / Бараа холбоос</label>
-<input type="text" id="product" required>
+<input type="text" id="product" required placeholder="请输入商品链接">
 
 <label>数量 / Quantity / Тоо ширхэг</label>
-<input type="number" id="quantity" required>
+<input type="number" id="quantity" required placeholder="请输入购买数量">
 
-<label>国家 / Country / Улс</label>
-<input type="text" id="country" required>
+<label>服务费 / Service Fee / Үйлчилгээний шимтгэл</label>
+<input type="text" value="20%" disabled style="background:#f0f4f8;color:#111;font-weight:600;">
 
 <label>单价 / Price / Нэгж үнэ (¥)</label>
-<input type="number" id="price" required>
+<input type="number" id="price" required placeholder="请输入商品单价">
+
+<label>国家 / Country / Улс</label>
+<input type="text" id="country" required placeholder="请输入收货国家">
+
+<label>姓名 / Name / Нэр</label>
+<input type="text" id="fullname" required placeholder="请输入收货人姓名">
+
+<label>州 / State / Муж</label>
+<input type="text" id="state" required placeholder="请输入州/省">
+
+<label>城市 / City / Хот</label>
+<input type="text" id="city" required placeholder="请输入城市">
+
+<label>街道地址 / Street Address / Гудамж</label>
+<input type="text" id="street" required placeholder="请输入街道地址">
+
+<label>联系电话 / Phone / Утас</label>
+<input type="text" id="phone" required placeholder="请输入联系电话">
+
+<label>邮编 / Zip Code / Шуудан код</label>
+<input type="text" id="zip" required placeholder="请输入邮编">
 
 <label>支付方式 / Payment / Төлбөрийн арга</label>
 <select id="payment">
@@ -54,6 +128,7 @@ button:hover{transform:scale(1.05);}
 </form>
 </div>
 
+<!-- 订单确认信息 -->
 <div id="orderResult" class="card"></div>
 
 <script>
@@ -64,8 +139,14 @@ document.getElementById("orderForm").addEventListener("submit", async function(e
     const data = {
         product: document.getElementById("product").value,
         quantity: document.getElementById("quantity").value,
-        country: document.getElementById("country").value,
         price: document.getElementById("price").value,
+        country: document.getElementById("country").value,
+        fullname: document.getElementById("fullname").value,
+        state: document.getElementById("state").value,
+        city: document.getElementById("city").value,
+        street: document.getElementById("street").value,
+        phone: document.getElementById("phone").value,
+        zip: document.getElementById("zip").value,
         payment: document.getElementById("payment").value,
         shipping: document.getElementById("shipping").value
     };
@@ -79,25 +160,32 @@ document.getElementById("orderForm").addEventListener("submit", async function(e
         if(result.status==="success"){
             const html = `
 <h2>✅ 订单确认 / Order Confirm / Захиалгын баталгаа</h2>
-<p>订单编号 / Order ID / Захиалгын дугаар: <strong>${result.order_id}</strong></p >
-<p>商品 / Product / Бараа: ${result.product}</p >
-<p>数量 / Quantity / Тоо ширхэг: ${result.quantity}</p >
-<p>国家 / Country / Улс: ${result.country}</p >
-<p>支付方式 / Payment / Төлбөрийн арга: ${result.payment}</p >
-<p>物流方式 / Shipping / Хүргэлтийн арга: ${result.shipping_method}</p >
-<p>手续费 / Fee / Үйлчилгээний шимтгэл: ¥${result.fee}</p >
-<p>物流费 / Shipping Fee / Хүргэлтийн үнэ: ¥${result.shipping_fee}</p >
-<p>总价 / Total / Нийт үнэ: ¥${result.total}</p >
-<p>⚠️ 请妥善保存订单编号 / Keep your Order ID / Захиалгын дугаарыг хадгалаарай</p >`;
+<p>订单编号 / Order ID: <strong>${result.order_id}</strong></p >
+<p>商品 / Product: ${result.product}</p >
+<p>数量 / Quantity: ${result.quantity}</p >
+<p>服务费 / Service Fee: 20%</p >
+<p>国家 / Country: ${result.country}</p >
+<p>姓名 / Name: ${result.fullname}</p >
+<p>州 / State: ${result.state}</p >
+<p>城市 / City: ${result.city}</p >
+<p>街道地址 / Street: ${result.street}</p >
+<p>联系电话 / Phone: ${result.phone}</p >
+<p>邮编 / Zip Code: ${result.zip}</p >
+<p>支付方式 / Payment: ${result.payment}</p >
+<p>物流方式 / Shipping: ${result.shipping_method}</p >
+<p>手续费 / Fee: ¥${result.fee}</p >
+<p>物流费 / Shipping Fee: ¥${result.shipping_fee}</p >
+<p>总价 / Total: ¥${result.total}</p >
+<p>⚠️ 请妥善保存订单编号 / Keep Order ID</p >`;
             const div=document.getElementById("orderResult");
             div.innerHTML=html;
             div.style.display="block";
             document.getElementById("orderForm").reset();
         }else{
-            alert("❌ 提交失败 / Failed / Амжилтгүй：" + result.message);
+            alert("❌ 提交失败: " + result.message);
         }
     }catch(err){
-        alert("❌ 提交失败 / Failed / Амжилтгүй: " + err);
+        alert("❌ 提交失败: " + err);
     }
 });
 </script>
