@@ -3,163 +3,104 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>China Shop </title>
+<title>CYZGO 代购系统</title>
 <style>
-*{box-sizing:border-box;margin:0;padding:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;}
-body{background:linear-gradient(180deg,#f0f4f8,#e0f2fe);color:#111;line-height:1.6;scroll-behavior:smooth;}
-.wrap{max-width:480px;margin:auto;padding:16px;transition:all 0.3s ease;}
-h1{font-size:28px;color:#111;margin-bottom:8px;text-align:center;animation:fadeInDown 1s;}
-h2{font-size:20px;color:#222;margin:12px 0 6px;animation:fadeInUp 1s;}
-p{margin:6px 0;animation:fadeInUp 1s;}
-a.btn{display:block;width:100%;text-align:center;padding:14px;border-radius:12px;text-decoration:none;font-weight:600;margin:10px 0;color:#fff;background:linear-gradient(90deg,#2563eb,#1d4ed8);transition:transform 0.2s;}
-a.btn:hover{transform:scale(1.05);}
-a.btn.secondary{background:#f3f4f6;color:#111;border:1px solid #ccc;}
-.card{background:#fff;border-radius:16px;padding:16px;margin:12px 0;box-shadow:0 4px 16px rgba(0,0,0,0.1);transition:transform 0.3s;opacity:0;transform:translateY(20px);}
-.card.visible{opacity:1;transform:translateY(0);}
-.list li{margin:6px 0;list-style:disc;margin-left:20px;}
-.footer{text-align:center;font-size:12px;color:#666;padding:10px 0;}
-input, select, textarea{width:100%;padding:10px;margin:6px 0;border-radius:8px;border:1px solid #ccc;font-size:16px;transition:border 0.2s;}
-input:focus, select:focus, textarea:focus{border-color:#2563eb;outline:none;}
-form label{font-weight:600;margin-top:10px;display:block;}
-.language-toggle{text-align:center;margin:10px 0;}
-button.language-toggle-btn{margin:0 4px;padding:6px 10px;border-radius:8px;border:1px solid #ccc;background:#fff;cursor:pointer;transition:transform 0.2s;}
-button.language-toggle-btn:hover{transform:scale(1.05);}
-.order-list, #reviewCarousel{background:#e0f2fe;padding:10px;border-radius:12px;margin-bottom:12px;font-size:14px;animation:fadeIn 1s;}
-.badge{display:inline-block;background:#d1fae5;color:#065f46;padding:2px 6px;border-radius:6px;font-size:12px;margin-left:6px;}
-.floating-top{position:fixed;top:10px;left:50%;transform:translateX(-50%);background:linear-gradient(90deg,#2563eb,#1d4ed8);color:#fff;padding:12px 20px;border-radius:24px;font-weight:600;z-index:9999;box-shadow:0 4px 16px rgba(0,0,0,0.3);cursor:pointer;transition:transform 0.2s, box-shadow 0.2s;}
-.floating-top:hover{transform:translateX(-50%) scale(1.05); box-shadow:0 6px 20px rgba(0,0,0,0.35);}
-.floating-bottom{position:fixed;bottom:20px;right:20px;background:#10b981;color:#fff;padding:14px;border-radius:50%;font-size:18px;z-index:9999;cursor:pointer;box-shadow:0 4px 16px rgba(0,0,0,0.3);transition:transform 0.2s, box-shadow 0.2s;}
-.floating-bottom:hover{transform:scale(1.1); box-shadow:0 6px 20px rgba(0,0,0,0.35);}
-#productCarousel{overflow:hidden; border-radius:12px; height:200px; position:relative;}
-#productInner{display:flex; transition:transform 0.5s;}
-#productInner a img{width:100%;border-radius:12px;transition:transform 0.3s;}
-#productInner a:hover img{transform:scale(1.05);}
-#productInner a:hover .product-name{color:#2563eb;}
-.product-price{font-size:14px;color:#666;margin-top:10px;}
-#productInner .product-name{font-size:16px;margin-top:6px;font-weight:600;}
-@keyframes fadeIn{from{opacity:0;} to{opacity:1;}}
-@keyframes fadeInUp{from{opacity:0; transform:translateY(20px);} to{opacity:1; transform:translateY(0);}}
-@keyframes fadeInDown{from{opacity:0; transform:translateY(-20px);} to{opacity:1; transform:translateY(0);}}
+body{font-family:sans-serif;background:#f0f4f8;margin:0;padding:16px;}
+h1,h2{color:#111;text-align:center;}
+.card{background:#fff;padding:16px;margin:12px 0;border-radius:12px;box-shadow:0 4px 16px rgba(0,0,0,0.1);}
+input,select,button{width:100%;padding:10px;margin:6px 0;border-radius:8px;border:1px solid #ccc;}
+button{background:#2563eb;color:#fff;font-weight:600;cursor:pointer;}
+button:hover{transform:scale(1.05);}
+#orderResult{display:none;}
 </style>
 </head>
 <body>
-<div class="wrap">
 
-<div class="floating-top" onclick="scrollToForm()">立即下单 / Order Now</div>
-<div class="floating-bottom" onclick="contactTG()">💬</div>
-
-<section class="hero">
-<h1>China Shop 代购 演示版</h1>
-<p style="text-align:center;">轻松购买中国商品 / Buy anything from China<br>淘宝 · 1688 · 工厂直购</p >
-<a class="btn" href=" ">💬 联系 TG</a >
-<a class="btn secondary" href="https://t.me/cyzgoshoping">📢 加入频道</a >
-</section>
+<h1>CYZGO 代购系统 / CYZGO Shopping / CYZGO Худалдаа</h1>
 
 <div class="card">
-<h2>热门商品展示 / Featured Products</h2>
-<div id="productCarousel">
-<div id="productInner"></div>
-</div>
-</div>
+<h2>提交订单 / Submit Order / Захиалга</h2>
+<form id="orderForm">
+<label>商品链接 / Product Link / Бараа холбоос</label>
+<input type="text" id="product" required>
 
-<div class="card">
-<h2>最新订单 / Latest Orders</h2>
-<div id="orderCarousel" class="order-list"></div>
-</div>
+<label>数量 / Quantity / Тоо ширхэг</label>
+<input type="number" id="quantity" required>
 
-<div class="card">
-<h2>客户评价 / Customer Reviews</h2>
-<div id="reviewCarousel" class="review"></div>
-</div>
+<label>国家 / Country / Улс</label>
+<input type="text" id="country" required>
 
-<div class="card" id="orderFormCard">
-<h2>填写代购信息 / Fill Order Info</h2>
-<form id="orderForm" onsubmit="submitForm(event)">
-<label>商品链接 / Product Link</label><input type="text" id="product" placeholder="输入商品链接" required>
-<label>数量 / Quantity</label><input type="number" id="quantity" placeholder="输入数量" required>
-<label>国家 / Country</label><input type="text" id="country" placeholder="输入你的国家" required>
-<label>支付方式 / Payment</label>
-<select id="payment" required>
+<label>单价 / Price / Нэгж үнэ (¥)</label>
+<input type="number" id="price" required>
+
+<label>支付方式 / Payment / Төлбөрийн арга</label>
+<select id="payment">
 <option value="PayPal">PayPal</option>
 <option value="USDT">USDT</option>
 <option value="支付宝">Alipay</option>
 <option value="微信">WeChat</option>
 </select>
-<label>物流方式 / Shipping</label>
-<select id="shipping" required>
+
+<label>物流方式 / Shipping / Хүргэлтийн арга</label>
+<select id="shipping">
 <option value="DHL">DHL</option>
 <option value="UPS">UPS</option>
 <option value="EMS">EMS</option>
-<option value="空运">Air</option>
-<option value="海运">Sea</option>
+<option value="空运">Air / Агаарын</option>
+<option value="海运">Sea / Далайн</option>
 </select>
-<button type="submit" class="btn">提交并联系 TG</button>
+
+<button type="submit">提交订单 / Submit / Илгээх</button>
 </form>
 </div>
 
-<div class="footer">© CYZGO 演示版</div>
-
-</div>
+<div id="orderResult" class="card"></div>
 
 <script>
-// 最新订单轮播
-var recentOrders=["俄罗斯 🇷🇺 - 2 件","美国 🇺🇸 - 1 件","蒙古 🇲🇳 - 3 件","德国 🇩🇪 - 1 件"];
-var currentOrder=0;
-function showOrderCarousel(){document.getElementById("orderCarousel").textContent=recentOrders[currentOrder];currentOrder=(currentOrder+1)%recentOrders.length;}
-showOrderCarousel(); setInterval(showOrderCarousel,2500);
+const apiUrl = "https://你的服务器域名:5000/new_order";
 
-// 客户评价轮播
-var reviews=["⭐️⭐️⭐️⭐️⭐️ Anna: 很快，非常满意！","⭐️⭐️⭐️⭐️⭐️ John: Great service!","⭐️⭐️⭐️⭐️⭐️ Bat: Маш сайн үйлчилгээ!"];
-var currentReview=0;
-function showReviewCarousel(){document.getElementById("reviewCarousel").textContent=reviews[currentReview];currentReview=(currentReview+1)%reviews.length;}
-showReviewCarousel(); setInterval(showReviewCarousel,3500);
-
-// 产品轮播
-var products=[
-{img:"https://img.alicdn.com/imgextra/i4/2200811631242/O1CN01ZxabcD1CXy.jpg", name:"商品1", price:"¥199", link:"https://item.taobao.com/item.htm?id=123456"},
-{img:"https://img.alicdn.com/imgextra/i3/2200811631242/O1CN01Abcd12.jpg", name:"商品2", price:"¥299", link:"https://item.taobao.com/item.htm?id=234567"},
-{img:"https://img.alicdn.com/imgextra/i2/2200811631242/O1CN01Efgh34.jpg", name:"商品3", price:"¥399", link:"https://item.taobao.com/item.htm?id=345678"},
-{img:"https://img.alicdn.com/imgextra/i1/2200811631242/O1CN01Ijkl56.jpg", name:"商品4", price:"¥499", link:"https://item.taobao.com/item.htm?id=456789"},
-{img:"https://img.alicdn.com/imgextra/i5/2200811631242/O1CN01Mnop78.jpg", name:"商品5", price:"¥599", link:"https://item.taobao.com/item.htm?id=567890"}
-];
-var productIndex=0;
-var productInner=document.getElementById("productInner");
-productInner.innerHTML="";
-products.forEach(p=>{
-  var div=document.createElement("div");
-  div.style.minWidth="150px"; div.style.marginRight="10px"; div.style.textAlign="center";
-  div.innerHTML=`<a href="${p.link}" target="_blank">< img src="${p.img}"></a >
-                 <div class="product-name">${p.name}</div>
-                 <div class="product-price">${p.price}</div>`;
-  productInner.appendChild(div);
+document.getElementById("orderForm").addEventListener("submit", async function(e){
+    e.preventDefault();
+    const data = {
+        product: document.getElementById("product").value,
+        quantity: document.getElementById("quantity").value,
+        country: document.getElementById("country").value,
+        price: document.getElementById("price").value,
+        payment: document.getElementById("payment").value,
+        shipping: document.getElementById("shipping").value
+    };
+    try {
+        const res = await fetch(apiUrl,{
+            method:"POST",
+            headers:{"Content-Type":"application/json"},
+            body:JSON.stringify(data)
+        });
+        const result = await res.json();
+        if(result.status==="success"){
+            const html = `
+<h2>✅ 订单确认 / Order Confirm / Захиалгын баталгаа</h2>
+<p>订单编号 / Order ID / Захиалгын дугаар: <strong>${result.order_id}</strong></p >
+<p>商品 / Product / Бараа: ${result.product}</p >
+<p>数量 / Quantity / Тоо ширхэг: ${result.quantity}</p >
+<p>国家 / Country / Улс: ${result.country}</p >
+<p>支付方式 / Payment / Төлбөрийн арга: ${result.payment}</p >
+<p>物流方式 / Shipping / Хүргэлтийн арга: ${result.shipping_method}</p >
+<p>手续费 / Fee / Үйлчилгээний шимтгэл: ¥${result.fee}</p >
+<p>物流费 / Shipping Fee / Хүргэлтийн үнэ: ¥${result.shipping_fee}</p >
+<p>总价 / Total / Нийт үнэ: ¥${result.total}</p >
+<p>⚠️ 请妥善保存订单编号 / Keep your Order ID / Захиалгын дугаарыг хадгалаарай</p >`;
+            const div=document.getElementById("orderResult");
+            div.innerHTML=html;
+            div.style.display="block";
+            document.getElementById("orderForm").reset();
+        }else{
+            alert("❌ 提交失败 / Failed / Амжилтгүй：" + result.message);
+        }
+    }catch(err){
+        alert("❌ 提交失败 / Failed / Амжилтгүй: " + err);
+    }
 });
-function showProductCarousel(){
-  var shift=-((productIndex % products.length) * 160);
-  productInner.style.transform=`translateX(${shift}px)`;
-  productIndex++;
-}
-showProductCarousel();
-setInterval(showProductCarousel,3000);
-
-// 表单提交
-function submitForm(e){
-e.preventDefault();
-var product=document.getElementById("product").value;
-var quantity=document.getElementById("quantity").value;
-var country=document.getElementById("country").value;
-var payment=document.getElementById("payment").value;
-var shipping=document.getElementById("shipping").value;
-var message=encodeURIComponent(`你好，我想代购商品：\n链接: ${product}\n数量: ${quantity}\n国家: ${country}\n支付方式: ${payment}\n物流方式: ${shipping}`);
-window.location.href=`https://t.me/cyzgo?text=${message}`;
-}
-
-// 滚动动画
-var observer=new IntersectionObserver(entries=>{entries.forEach(entry=>{if(entry.isIntersecting){entry.target.classList.add("visible");}})},{threshold:0.1});
-document.querySelectorAll(".card").forEach(c=>observer.observe(c));
-
-// 浮动按钮
-function scrollToForm(){document.getElementById("orderFormCard").scrollIntoView({behavior:"smooth"});}
-function contactTG(){window.location.href="https://t.me/cyzgo";}
 </script>
+
 </body>
 </html>
