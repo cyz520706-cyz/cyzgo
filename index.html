@@ -1,201 +1,105 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
+<title>CYZGO China Buying Agent</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>CYZGO 代购系统</title>
+
 <style>
-/* ===== 整体样式 ===== */
+*{box-sizing:border-box}
 body{
-    font-family:'Segoe UI', sans-serif;
-    background:#f5f7fa;
-    margin:0;
-    padding:16px;
-    color:#111;
+margin:0;
+font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto;
+background:#020617;
+color:#e5e7eb;
+line-height:1.6
 }
-h1,h2{text-align:center;color:#1f2937;margin-bottom:12px;}
+.wrap{max-width:480px;margin:auto;padding:16px}
 .card{
-    background:#fff;
-    padding:20px;
-    margin:20px auto;
-    border-radius:16px;
-    max-width:480px;
-    box-shadow:0 8px 24px rgba(0,0,0,0.12);
+background:#020617;
+border:1px solid #1e293b;
+border-radius:18px;
+padding:18px;
+margin:14px 0
 }
-input, select{
-    width:100%;
-    padding:12px;
-    margin:8px 0;
-    border-radius:10px;
-    border:1px solid #d1d5db;
-    font-size:16px;
-    transition:all 0.2s;
+h1{font-size:28px;margin:8px 0;color:#fff}
+h2{font-size:20px;margin:6px 0;color:#fff}
+p{margin:8px 0}
+.hero{text-align:center;padding:20px 10px}
+.badge{display:inline-block;background:#0f172a;padding:6px 12px;border-radius:999px;font-size:13px;opacity:.85}
+.btn{
+display:block;
+width:100%;
+background:#2563eb;
+color:white;
+text-align:center;
+padding:14px;
+border-radius:14px;
+text-decoration:none;
+font-weight:600;
+margin:10px 0
 }
-input:focus, select:focus{
-    outline:none;
-    border-color:#2563eb;
-    box-shadow:0 0 6px rgba(37,99,235,0.3);
-}
-button{
-    width:100%;
-    padding:14px;
-    margin-top:12px;
-    border:none;
-    border-radius:12px;
-    background:linear-gradient(90deg,#2563eb,#3b82f6);
-    color:#fff;
-    font-size:18px;
-    font-weight:600;
-    cursor:pointer;
-    transition:transform 0.2s, box-shadow 0.2s;
-}
-button:hover{
-    transform:scale(1.03);
-    box-shadow:0 6px 20px rgba(37,99,235,0.3);
-}
-#orderResult{display:none;line-height:1.6;}
-#orderResult h2{color:#2563eb;}
-#orderResult p{margin:6px 0;}
-a{color:#2563eb;text-decoration:none;}
-a:hover{text-decoration:underline;}
-/* ===== 手机端适配 ===== */
-@media screen and (max-width:500px){
-    body{padding:12px;}
-    .card{padding:16px;margin:16px auto;}
-    input,select,button{font-size:16px;padding:10px;}
-}
+.btn.secondary{background:#0f172a;border:1px solid #1e293b}
+.list li{margin:8px 0}
+.footer{text-align:center;font-size:13px;opacity:.6;padding:10px}
 </style>
 </head>
+
 <body>
+<div class="wrap">
 
-<h1>CYZGO 代购系统 / CYZGO Shopping / CYZGO Худалдаа</h1>
+<section class="hero">
+<span class="badge">🇨🇳 China Buying Agent</span>
+<h1>CYZGO</h1>
+<p>Buy anything from China easily.<br>Taobao · 1688 · Factories</p >
+<a class="btn" href=" ">💬 Contact on Telegram</a >
+<a class="btn secondary" href="https://t.me/你的频道">📢 Join Channel</a >
+</section>
 
-<!-- 客服信息 -->
 <div class="card">
-<h2>联系客服 / Contact / Холбоо барих</h2>
-<p>Telegram: <a href=" " target="_blank">@cyzgoshoping</a ></p >
-<p>Username: @cyzgo</p >
+<h2>✅ What we do</h2>
+<ul class="list">
+<li>Product sourcing from China</li>
+<li>Purchase & quality check</li>
+<li>Factory & wholesale support</li>
+<li>International shipping</li>
+</ul>
 </div>
 
-<!-- 下单表单 -->
 <div class="card">
-<h2>立即下单 / Submit Order / Илгээх Захиалга</h2>
-<form id="orderForm">
-<label>商品链接 / Product Link / Бараа холбоос</label>
-<input type="text" id="product" required placeholder="请输入商品链接">
-
-<label>数量 / Quantity / Тоо ширхэг</label>
-<input type="number" id="quantity" required placeholder="请输入购买数量">
-
-<label>服务费 / Service Fee / Үйлчилгээний шимтгэл</label>
-<input type="text" value="20%" disabled style="background:#f0f4f8;color:#111;font-weight:600;">
-
-<label>单价 / Price / Нэгж үнэ (¥)</label>
-<input type="number" id="price" required placeholder="请输入商品单价">
-
-<label>国家 / Country / Улс</label>
-<input type="text" id="country" required placeholder="请输入收货国家">
-
-<label>姓名 / Name / Нэр</label>
-<input type="text" id="fullname" required placeholder="请输入收货人姓名">
-
-<label>州 / State / Муж</label>
-<input type="text" id="state" required placeholder="请输入州/省">
-
-<label>城市 / City / Хот</label>
-<input type="text" id="city" required placeholder="请输入城市">
-
-<label>街道地址 / Street Address / Гудамж</label>
-<input type="text" id="street" required placeholder="请输入街道地址">
-
-<label>联系电话 / Phone / Утас</label>
-<input type="text" id="phone" required placeholder="请输入联系电话">
-
-<label>邮编 / Zip Code / Шуудан код</label>
-<input type="text" id="zip" required placeholder="请输入邮编">
-
-<label>支付方式 / Payment / Төлбөрийн арга</label>
-<select id="payment">
-<option value="PayPal">PayPal</option>
-<option value="USDT">USDT</option>
-<option value="支付宝">Alipay</option>
-<option value="微信">WeChat</option>
-</select>
-
-<label>物流方式 / Shipping / Хүргэлтийн арга</label>
-<select id="shipping">
-<option value="DHL">DHL</option>
-<option value="UPS">UPS</option>
-<option value="EMS">EMS</option>
-<option value="空运">Air / Агаарын</option>
-<option value="海运">Sea / Далайн</option>
-</select>
-
-<button type="submit">提交订单 / Submit / Илгээх</button>
-</form>
+<h2>🧭 How it works</h2>
+<ul class="list">
+<li>1. Send product link or photo</li>
+<li>2. Get full quotation</li>
+<li>3. Make payment</li>
+<li>4. We buy & inspect</li>
+<li>5. We ship to you</li>
+</ul>
 </div>
 
-<!-- 订单确认信息 -->
-<div id="orderResult" class="card"></div>
+<div class="card">
+<h2>💳 Payment & 🚚 Shipping</h2>
+<p><b>Payment:</b> PayPal · USDT · Alipay · WeChat</p >
+<p><b>Shipping:</b> DHL · UPS · EMS · Air · Sea</p >
+</div>
 
-<script>
-const apiUrl = "https://你的服务器域名:5000/new_order";
+<div class="card">
+<h2>❓ FAQ</h2>
+<p><b>What can you buy?</b><br>Almost anything from China.</p >
+<p><b>Do you support small orders?</b><br>Yes, small & bulk orders.</p >
+<p><b>How long is shipping?</b><br>5–15 days by air.</p >
+</div>
 
-document.getElementById("orderForm").addEventListener("submit", async function(e){
-    e.preventDefault();
-    const data = {
-        product: document.getElementById("product").value,
-        quantity: document.getElementById("quantity").value,
-        price: document.getElementById("price").value,
-        country: document.getElementById("country").value,
-        fullname: document.getElementById("fullname").value,
-        state: document.getElementById("state").value,
-        city: document.getElementById("city").value,
-        street: document.getElementById("street").value,
-        phone: document.getElementById("phone").value,
-        zip: document.getElementById("zip").value,
-        payment: document.getElementById("payment").value,
-        shipping: document.getElementById("shipping").value
-    };
-    try {
-        const res = await fetch(apiUrl,{
-            method:"POST",
-            headers:{"Content-Type":"application/json"},
-            body:JSON.stringify(data)
-        });
-        const result = await res.json();
-        if(result.status==="success"){
-            const html = `
-<h2>✅ 订单确认 / Order Confirm / Захиалгын баталгаа</h2>
-<p>订单编号 / Order ID: <strong>${result.order_id}</strong></p >
-<p>商品 / Product: ${result.product}</p >
-<p>数量 / Quantity: ${result.quantity}</p >
-<p>服务费 / Service Fee: 20%</p >
-<p>国家 / Country: ${result.country}</p >
-<p>姓名 / Name: ${result.fullname}</p >
-<p>州 / State: ${result.state}</p >
-<p>城市 / City: ${result.city}</p >
-<p>街道地址 / Street: ${result.street}</p >
-<p>联系电话 / Phone: ${result.phone}</p >
-<p>邮编 / Zip Code: ${result.zip}</p >
-<p>支付方式 / Payment: ${result.payment}</p >
-<p>物流方式 / Shipping: ${result.shipping_method}</p >
-<p>手续费 / Fee: ¥${result.fee}</p >
-<p>物流费 / Shipping Fee: ¥${result.shipping_fee}</p >
-<p>总价 / Total: ¥${result.total}</p >
-<p>⚠️ 请妥善保存订单编号 / Keep Order ID</p >`;
-            const div=document.getElementById("orderResult");
-            div.innerHTML=html;
-            div.style.display="block";
-            document.getElementById("orderForm").reset();
-        }else{
-            alert("❌ 提交失败: " + result.message);
-        }
-    }catch(err){
-        alert("❌ 提交失败: " + err);
-    }
-});
-</script>
+<div class="card">
+<h2>📩 Start now</h2>
+<p>Send us product link, quantity and your country.</p >
+<a class="btn" href="https://t.me/你的TG">Start on Telegram</a >
+</div>
 
+<div class="footer">
+© CYZGO.us.cc – China Buying Agent
+</div>
+
+</div>
 </body>
 </html>
