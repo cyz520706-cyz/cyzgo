@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>China Shop 代购 - CYZGO</title>
+<title>China Shop 演示版</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;}
 body{background:linear-gradient(180deg,#f0f4f8,#e0f2fe);color:#111;line-height:1.6;scroll-behavior:smooth;}
@@ -30,7 +30,13 @@ button.language-toggle-btn:hover{transform:scale(1.05);}
 .floating-top:hover{transform:translateX(-50%) scale(1.05); box-shadow:0 6px 20px rgba(0,0,0,0.35);}
 .floating-bottom{position:fixed;bottom:20px;right:20px;background:#10b981;color:#fff;padding:14px;border-radius:50%;font-size:18px;z-index:9999;cursor:pointer;box-shadow:0 4px 16px rgba(0,0,0,0.3);transition:transform 0.2s, box-shadow 0.2s;}
 .floating-bottom:hover{transform:scale(1.1); box-shadow:0 6px 20px rgba(0,0,0,0.35);}
-/* 动画关键帧 */
+#productCarousel{overflow:hidden; border-radius:12px; height:200px; position:relative;}
+#productInner{display:flex; transition:transform 0.5s;}
+#productInner a img{width:100%;border-radius:12px;transition:transform 0.3s;}
+#productInner a:hover img{transform:scale(1.05);}
+#productInner a:hover .product-name{color:#2563eb;}
+.product-price{font-size:14px;color:#666;margin-top:10px;}
+#productInner .product-name{font-size:16px;margin-top:6px;font-weight:600;}
 @keyframes fadeIn{from{opacity:0;} to{opacity:1;}}
 @keyframes fadeInUp{from{opacity:0; transform:translateY(20px);} to{opacity:1; transform:translateY(0);}}
 @keyframes fadeInDown{from{opacity:0; transform:translateY(-20px);} to{opacity:1; transform:translateY(0);}}
@@ -42,41 +48,44 @@ button.language-toggle-btn:hover{transform:scale(1.05);}
 <div class="floating-top" onclick="scrollToForm()">立即下单 / Order Now</div>
 <div class="floating-bottom" onclick="contactTG()">💬</div>
 
-<div class="language-toggle">
-  <button class="language-toggle-btn" onclick="switchLanguage('zh')">中文</button>
-  <button class="language-toggle-btn" onclick="switchLanguage('en')">English</button>
-  <button class="language-toggle-btn" onclick="switchLanguage('mn')">Монгол</button>
-</div>
-
 <section class="hero">
-<h1 id="title">China Shop 代购 / China Buying Agent</h1>
-<p id="description" style="text-align:center;">轻松购买中国商品 / Buy anything from China<br>淘宝 · 1688 · 工厂直购 / Taobao · 1688 · Factory</p >
-<a class="btn" href=" " id="contact">💬 联系 TG / Contact TG</a >
-<a class="btn secondary" href="https://t.me/cyzgoshoping" id="channel">📢 加入频道 / Join Channel</a >
+<h1>China Shop 代购 演示版</h1>
+<p style="text-align:center;">轻松购买中国商品 / Buy anything from China<br>淘宝 · 1688 · 工厂直购</p >
+<a class="btn" href=" ">💬 联系 TG</a >
+<a class="btn secondary" href="https://t.me/cyzgoshoping">📢 加入频道</a >
 </section>
 
-<div class="card" id="orderListCard">
-<h2 id="orderTitle">最新订单 / Latest Orders</h2>
+<div class="card">
+<h2>热门商品展示 / Featured Products</h2>
+<div id="productCarousel">
+<div id="productInner"></div>
+</div>
+</div>
+
+<div class="card">
+<h2>最新订单 / Latest Orders</h2>
 <div id="orderCarousel" class="order-list"></div>
 </div>
 
+<div class="card">
+<h2>客户评价 / Customer Reviews</h2>
+<div id="reviewCarousel" class="review"></div>
+</div>
+
 <div class="card" id="orderFormCard">
-<h2 id="formTitle">填写代购信息 / Fill Order Info</h2>
+<h2>填写代购信息 / Fill Order Info</h2>
 <form id="orderForm" onsubmit="submitForm(event)">
-<label id="productLabel">商品链接 / Product Link</label>
-<input type="text" id="product" placeholder="输入商品链接 / Enter product link" required>
-<label id="quantityLabel">数量 / Quantity</label>
-<input type="number" id="quantity" placeholder="输入数量 / Enter quantity" required>
-<label id="countryLabel">你的国家 / Your Country</label>
-<input type="text" id="country" placeholder="输入你的国家 / Enter your country" required>
-<label id="paymentLabel">支付方式 / Payment Method</label>
+<label>商品链接 / Product Link</label><input type="text" id="product" placeholder="输入商品链接" required>
+<label>数量 / Quantity</label><input type="number" id="quantity" placeholder="输入数量" required>
+<label>国家 / Country</label><input type="text" id="country" placeholder="输入你的国家" required>
+<label>支付方式 / Payment</label>
 <select id="payment" required>
 <option value="PayPal">PayPal</option>
 <option value="USDT">USDT</option>
 <option value="支付宝">Alipay</option>
 <option value="微信">WeChat</option>
 </select>
-<label id="shippingLabel">物流方式 / Shipping Method</label>
+<label>物流方式 / Shipping</label>
 <select id="shipping" required>
 <option value="DHL">DHL</option>
 <option value="UPS">UPS</option>
@@ -84,70 +93,55 @@ button.language-toggle-btn:hover{transform:scale(1.05);}
 <option value="空运">Air</option>
 <option value="海运">Sea</option>
 </select>
-<button type="submit" class="btn" id="submitBtn">提交并联系 TG / Submit & Contact TG</button>
+<button type="submit" class="btn">提交并联系 TG</button>
 </form>
 </div>
 
-<!-- 产品轮播 -->
-<div class="card" id="productCarouselCard">
-<h2 id="productTitle">热门代购商品 / Featured Products</h2>
-<div id="productCarousel" style="overflow:hidden; border-radius:12px; height:200px; position:relative;">
-  <div id="productInner" style="display:flex; transition:transform 0.5s;"></div>
-</div>
-</div>
-
-<div class="card">
-<h2 id="serviceTitle">服务 / Services</h2>
-<ul class="list">
-<li id="service1">中国商品代购 / Product sourcing from China</li>
-<li id="service2">付款与质量检查 / Payment & Quality Check</li>
-<li id="service3">批发/工厂下单支持 / Wholesale & Factory Orders</li>
-<li id="service4">国际物流运输 / International Shipping</li>
-</ul>
-</div>
-
-<div class="card">
-<h2 id="processTitle">购买流程 / How It Works</h2>
-<ul class="list">
-<li id="process1">1️⃣ 发送商品链接或图片 / Send product link or photo</li>
-<li id="process2">2️⃣ 获取报价 / Get a full quotation</li>
-<li id="process3">3️⃣ 支付订单 / Make payment</li>
-<li id="process4">4️⃣ 我们采购并验货 / We buy & inspect</li>
-<li id="process5">5️⃣ 发货到你的国家 / Ship to your country</li>
-</ul>
-</div>
-
-<div class="card" id="reviewCard">
-<h2 id="reviewTitle">客户评价 / Customer Reviews</h2>
-<div id="reviewCarousel" class="review"></div>
-</div>
-
-<div class="card">
-<h2 id="safeTitle">安全保障 / Safety Guarantee</h2>
-<ul class="list">
-<li>🔒 安全支付 / Secure Payment <span class="badge">安全</span></li>
-<li>📦 质量保障 / Quality Check <span class="badge">可靠</span></li>
-<li>✈️ 国际物流 / International Shipping <span class="badge">快速</span></li>
-</ul>
-</div>
-
-<div class="footer">
-© CYZGO - China Shop 代购 / Buying Agent
-</div>
+<div class="footer">© CYZGO 演示版</div>
 
 </div>
 
 <script>
-// 多语言对象可扩展
-var lang = {};
-var currentLang="zh";
-function switchLanguage(l){currentLang=l;for(var id in lang[currentLang]){var el=document.getElementById(id);if(el)el.textContent=lang[currentLang][id];}}
+// 最新订单轮播
+var recentOrders=["俄罗斯 🇷🇺 - 2 件","美国 🇺🇸 - 1 件","蒙古 🇲🇳 - 3 件","德国 🇩🇪 - 1 件"];
+var currentOrder=0;
+function showOrderCarousel(){document.getElementById("orderCarousel").textContent=recentOrders[currentOrder];currentOrder=(currentOrder+1)%recentOrders.length;}
+showOrderCarousel(); setInterval(showOrderCarousel,2500);
 
-// 滚动 & 联系
-function scrollToForm(){document.getElementById("orderFormCard").scrollIntoView({behavior:"smooth"});}
-function contactTG(){window.location.href="https://t.me/cyzgo";}
+// 客户评价轮播
+var reviews=["⭐️⭐️⭐️⭐️⭐️ Anna: 很快，非常满意！","⭐️⭐️⭐️⭐️⭐️ John: Great service!","⭐️⭐️⭐️⭐️⭐️ Bat: Маш сайн үйлчилгээ!"];
+var currentReview=0;
+function showReviewCarousel(){document.getElementById("reviewCarousel").textContent=reviews[currentReview];currentReview=(currentReview+1)%reviews.length;}
+showReviewCarousel(); setInterval(showReviewCarousel,3500);
 
-// 表单提交 TG
+// 产品轮播
+var products=[
+{img:"https://img.alicdn.com/imgextra/i4/2200811631242/O1CN01ZxabcD1CXy.jpg", name:"商品1", price:"¥199", link:"https://item.taobao.com/item.htm?id=123456"},
+{img:"https://img.alicdn.com/imgextra/i3/2200811631242/O1CN01Abcd12.jpg", name:"商品2", price:"¥299", link:"https://item.taobao.com/item.htm?id=234567"},
+{img:"https://img.alicdn.com/imgextra/i2/2200811631242/O1CN01Efgh34.jpg", name:"商品3", price:"¥399", link:"https://item.taobao.com/item.htm?id=345678"},
+{img:"https://img.alicdn.com/imgextra/i1/2200811631242/O1CN01Ijkl56.jpg", name:"商品4", price:"¥499", link:"https://item.taobao.com/item.htm?id=456789"},
+{img:"https://img.alicdn.com/imgextra/i5/2200811631242/O1CN01Mnop78.jpg", name:"商品5", price:"¥599", link:"https://item.taobao.com/item.htm?id=567890"}
+];
+var productIndex=0;
+var productInner=document.getElementById("productInner");
+productInner.innerHTML="";
+products.forEach(p=>{
+  var div=document.createElement("div");
+  div.style.minWidth="150px"; div.style.marginRight="10px"; div.style.textAlign="center";
+  div.innerHTML=`<a href="${p.link}" target="_blank">< img src="${p.img}"></a >
+                 <div class="product-name">${p.name}</div>
+                 <div class="product-price">${p.price}</div>`;
+  productInner.appendChild(div);
+});
+function showProductCarousel(){
+  var shift=-((productIndex % products.length) * 160);
+  productInner.style.transform=`translateX(${shift}px)`;
+  productIndex++;
+}
+showProductCarousel();
+setInterval(showProductCarousel,3000);
+
+// 表单提交
 function submitForm(e){
 e.preventDefault();
 var product=document.getElementById("product").value;
@@ -159,49 +153,13 @@ var message=encodeURIComponent(`你好，我想代购商品：\n链接: ${produc
 window.location.href=`https://t.me/cyzgo?text=${message}`;
 }
 
-// 卡片滚动动画
+// 滚动动画
 var observer=new IntersectionObserver(entries=>{entries.forEach(entry=>{if(entry.isIntersecting){entry.target.classList.add("visible");}})},{threshold:0.1});
 document.querySelectorAll(".card").forEach(c=>observer.observe(c));
 
-// 最新订单轮播
-var recentOrders=["俄罗斯 🇷🇺 - 2 件","美国 🇺🇸 - 1 件","蒙古 🇲🇳 - 3 件","德国 🇩🇪 - 1 件","哈萨克 🇰🇿 - 2 件"];
-var currentOrder=0;
-function showOrderCarousel(){document.getElementById("orderCarousel").textContent=recentOrders[currentOrder];currentOrder=(currentOrder+1)%recentOrders.length;}
-showOrderCarousel(); setInterval(showOrderCarousel,2500);
-
-// 客户评价轮播
-var reviews=["⭐️⭐️⭐️⭐️⭐️ 来自俄罗斯的 Anna: “下单很方便，物流快速，推荐！”","⭐️⭐️⭐️⭐️⭐️ 来自美国的 John: “Great service, very trustworthy.”","⭐️⭐️⭐️⭐️⭐️ 来自蒙古的 Bat: “Бараа хурдан ирсэн, маш сайн үйлчилгээ.”"];
-var currentReview=0;
-function showReviewCarousel(){document.getElementById("reviewCarousel").textContent=reviews[currentReview];currentReview=(currentReview+1)%reviews.length;}
-showReviewCarousel(); setInterval(showReviewCarousel,3500);
-
-// 产品轮播 - 点击跳转真实商品
-var products=[
-{img:"https://img.alicdn.com/imgextra/i4/2200811631242/O1CN01ZxabcD1CXy.jpg", name:"商品1 / Product 1", link:"https://item.taobao.com/item.htm?id=123456"},
-{img:"https://img.alicdn.com/imgextra/i3/2200811631242/O1CN01Abcd12.jpg", name:"商品2 / Product 2", link:"https://item.taobao.com/item.htm?id=234567"},
-{img:"https://img.alicdn.com/imgextra/i2/2200811631242/O1CN01Efgh34.jpg", name:"商品3 / Product 3", link:"https://item.taobao.com/item.htm?id=345678"},
-{img:"https://img.alicdn.com/imgextra/i1/2200811631242/O1CN01Ijkl56.jpg", name:"商品4 / Product 4", link:"https://item.taobao.com/item.htm?id=456789"},
-{img:"https://img.alicdn.com/imgextra/i5/2200811631242/O1CN01Mnop78.jpg", name:"商品5 / Product 5", link:"https://item.taobao.com/item.htm?id=567890"}
-];
-var productIndex=0;
-var productInner=document.getElementById("productInner");
-productInner.innerHTML="";
-products.forEach(p=>{
-  var div=document.createElement("div");
-  div.style.minWidth="150px";
-  div.style.marginRight="10px";
-  div.style.textAlign="center";
-  div.innerHTML=`<a href="${p.link}" target="_blank">< img src="${p.img}" style="width:100%;border-radius:12px;"></a >
-                 <div style="margin-top:6px;font-size:14px;">${p.name}</div>`;
-  productInner.appendChild(div);
-});
-function showProductCarousel(){
-  var shift=-((productIndex % products.length) * 160);
-  productInner.style.transform=`translateX(${shift}px)`;
-  productIndex++;
-}
-showProductCarousel();
-setInterval(showProductCarousel,3000);
+// 浮动按钮
+function scrollToForm(){document.getElementById("orderFormCard").scrollIntoView({behavior:"smooth"});}
+function contactTG(){window.location.href="https://t.me/cyzgo";}
 </script>
 </body>
 </html>
