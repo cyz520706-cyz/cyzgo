@@ -1,105 +1,249 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
-<title>CYZGO China Buying Agent</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>China Shop 代购 - CYZGO</title>
 
 <style>
-*{box-sizing:border-box}
-body{
-margin:0;
-font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto;
-background:#020617;
-color:#e5e7eb;
-line-height:1.6
-}
-.wrap{max-width:480px;margin:auto;padding:16px}
-.card{
-background:#020617;
-border:1px solid #1e293b;
-border-radius:18px;
-padding:18px;
-margin:14px 0
-}
-h1{font-size:28px;margin:8px 0;color:#fff}
-h2{font-size:20px;margin:6px 0;color:#fff}
-p{margin:8px 0}
-.hero{text-align:center;padding:20px 10px}
-.badge{display:inline-block;background:#0f172a;padding:6px 12px;border-radius:999px;font-size:13px;opacity:.85}
-.btn{
-display:block;
-width:100%;
-background:#2563eb;
-color:white;
-text-align:center;
-padding:14px;
-border-radius:14px;
-text-decoration:none;
-font-weight:600;
-margin:10px 0
-}
-.btn.secondary{background:#0f172a;border:1px solid #1e293b}
-.list li{margin:8px 0}
-.footer{text-align:center;font-size:13px;opacity:.6;padding:10px}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;background:#f5f5f7;color:#111;line-height:1.6;}
+.wrap{max-width:480px;margin:auto;padding:16px;}
+h1{font-size:28px;color:#111;margin-bottom:8px;text-align:center;}
+h2{font-size:20px;color:#222;margin:12px 0 6px;}
+p{margin:6px 0;}
+a.btn{display:block;width:100%;background:#2563eb;color:#fff;text-align:center;padding:14px;border-radius:12px;text-decoration:none;font-weight:600;margin:10px 0;}
+a.btn.secondary{background:#f3f4f6;color:#111;border:1px solid #ccc;}
+.card{background:#fff;border-radius:16px;padding:16px;margin:12px 0;box-shadow:0 2px 8px rgba(0,0,0,0.05);}
+.list li{margin:6px 0;list-style:disc;margin-left:20px;}
+.footer{text-align:center;font-size:12px;color:#666;padding:10px 0;}
+input, select, textarea{width:100%;padding:10px;margin:6px 0;border-radius:8px;border:1px solid #ccc;font-size:16px;}
+form label{font-weight:600;margin-top:10px;display:block;}
+.language-toggle{text-align:center;margin:10px 0;}
 </style>
 </head>
-
 <body>
 <div class="wrap">
 
+<!-- Language Switcher -->
+<div class="language-toggle">
+  <button onclick="switchLanguage('zh')">中文</button>
+  <button onclick="switchLanguage('en')">English</button>
+  <button onclick="switchLanguage('mn')">Монгол</button>
+</div>
+
+<!-- Hero Section -->
 <section class="hero">
-<span class="badge">🇨🇳 China Buying Agent</span>
-<h1>CYZGO</h1>
-<p>Buy anything from China easily.<br>Taobao · 1688 · Factories</p >
-<a class="btn" href=" ">💬 Contact on Telegram</a >
-<a class="btn secondary" href="https://t.me/你的频道">📢 Join Channel</a >
+<h1 id="title">China Shop 代购 / China Buying Agent</h1>
+<p id="description" style="text-align:center;">轻松购买中国商品 / Buy anything from China<br>淘宝 · 1688 · 工厂直购 / Taobao · 1688 · Factory</p >
+<a class="btn" href=" " id="contact">💬 联系 TG / Contact TG</a >
+<a class="btn secondary" href="https://t.me/cyzgoshoping" id="channel">📢 加入频道 / Join Channel</a >
 </section>
 
+<!-- Order Form -->
 <div class="card">
-<h2>✅ What we do</h2>
+<h2 id="formTitle">填写代购信息 / Fill Order Info</h2>
+<form id="orderForm" onsubmit="submitForm(event)">
+<label id="productLabel">商品链接 / Product Link</label>
+<input type="text" id="product" placeholder="输入商品链接 / Enter product link" required>
+
+<label id="quantityLabel">数量 / Quantity</label>
+<input type="number" id="quantity" placeholder="输入数量 / Enter quantity" required>
+
+<label id="countryLabel">你的国家 / Your Country</label>
+<input type="text" id="country" placeholder="输入你的国家 / Enter your country" required>
+
+<label id="paymentLabel">支付方式 / Payment Method</label>
+<select id="payment" required>
+<option value="PayPal">PayPal</option>
+<option value="USDT">USDT</option>
+<option value="支付宝">Alipay</option>
+<option value="微信">WeChat</option>
+</select>
+
+<label id="shippingLabel">物流方式 / Shipping Method</label>
+<select id="shipping" required>
+<option value="DHL">DHL</option>
+<option value="UPS">UPS</option>
+<option value="EMS">EMS</option>
+<option value="空运">Air</option>
+<option value="海运">Sea</option>
+</select>
+
+<button type="submit" class="btn" id="submitBtn">提交并联系 TG / Submit & Contact TG</button>
+</form>
+</div>
+
+<!-- Services Section -->
+<div class="card">
+<h2 id="serviceTitle">服务 / Services</h2>
 <ul class="list">
-<li>Product sourcing from China</li>
-<li>Purchase & quality check</li>
-<li>Factory & wholesale support</li>
-<li>International shipping</li>
+<li id="service1">中国商品代购 / Product sourcing from China</li>
+<li id="service2">付款与质量检查 / Payment & Quality Check</li>
+<li id="service3">批发/工厂下单支持 / Wholesale & Factory Orders</li>
+<li id="service4">国际物流运输 / International Shipping</li>
 </ul>
 </div>
 
+<!-- Process Section -->
 <div class="card">
-<h2>🧭 How it works</h2>
+<h2 id="processTitle">购买流程 / How It Works</h2>
 <ul class="list">
-<li>1. Send product link or photo</li>
-<li>2. Get full quotation</li>
-<li>3. Make payment</li>
-<li>4. We buy & inspect</li>
-<li>5. We ship to you</li>
+<li id="process1">1️⃣ 发送商品链接或图片 / Send product link or photo</li>
+<li id="process2">2️⃣ 获取报价 / Get a full quotation</li>
+<li id="process3">3️⃣ 支付订单 / Make payment</li>
+<li id="process4">4️⃣ 我们采购并验货 / We buy & inspect</li>
+<li id="process5">5️⃣ 发货到你的国家 / Ship to your country</li>
 </ul>
 </div>
 
+<!-- FAQ Section -->
 <div class="card">
-<h2>💳 Payment & 🚚 Shipping</h2>
-<p><b>Payment:</b> PayPal · USDT · Alipay · WeChat</p >
-<p><b>Shipping:</b> DHL · UPS · EMS · Air · Sea</p >
+<h2 id="faqTitle">常见问题 / FAQ</h2>
+<p><b id="faq1Title">能买什么 / What can you buy?</b><br id="faq1Content">几乎所有中国商品 / Almost anything from China</p >
+<p><b id="faq2Title">支持小单吗 / Small orders?</b><br id="faq2Content">支持大小订单 / Yes, small & bulk orders</p >
+<p><b id="faq3Title">物流多久 / Shipping time?</b><br id="faq3Content">空运 5–15 天 / 5–15 days by air</p >
 </div>
 
-<div class="card">
-<h2>❓ FAQ</h2>
-<p><b>What can you buy?</b><br>Almost anything from China.</p >
-<p><b>Do you support small orders?</b><br>Yes, small & bulk orders.</p >
-<p><b>How long is shipping?</b><br>5–15 days by air.</p >
-</div>
-
-<div class="card">
-<h2>📩 Start now</h2>
-<p>Send us product link, quantity and your country.</p >
-<a class="btn" href="https://t.me/你的TG">Start on Telegram</a >
-</div>
-
+<!-- Footer Section -->
 <div class="footer">
-© CYZGO.us.cc – China Buying Agent
+© CYZGO - China Shop 代购 / Buying Agent
 </div>
 
 </div>
+
+<script>
+var lang = {
+  "zh": {
+    "title": "China Shop 代购 / China Buying Agent",
+    "description": "轻松购买中国商品 / Buy anything from China\n淘宝 · 1688 · 工厂直购 / Taobao · 1688 · Factory",
+    "contact": "💬 联系 TG / Contact TG",
+    "channel": "📢 加入频道 / Join Channel",
+    "formTitle": "填写代购信息 / Fill Order Info",
+    "productLabel": "商品链接 / Product Link",
+    "quantityLabel": "数量 / Quantity",
+    "countryLabel": "你的国家 / Your Country",
+    "paymentLabel": "支付方式 / Payment Method",
+    "shippingLabel": "物流方式 / Shipping Method",
+    "submitBtn": "提交并联系 TG / Submit & Contact TG",
+    "serviceTitle": "服务 / Services",
+    "service1": "中国商品代购 / Product sourcing from China",
+    "service2": "付款与质量检查 / Payment & Quality Check",
+    "service3": "批发/工厂下单支持 / Wholesale & Factory Orders",
+    "service4": "国际物流运输 / International Shipping",
+    "processTitle": "购买流程 / How It Works",
+    "process1": "1️⃣ 发送商品链接或图片 / Send product link or photo",
+    "process2": "2️⃣ 获取报价 / Get a full quotation",
+    "process3": "3️⃣ 支付订单 / Make payment",
+    "process4": "4️⃣ 我们采购并验货 / We buy & inspect",
+    "process5": "5️⃣ 发货到你的国家 / Ship to your country",
+    "faqTitle": "常见问题 / FAQ",
+    "faq1Title": "能买什么 / What can you buy?",
+    "faq1Content": "几乎所有中国商品 / Almost anything from China",
+    "faq2Title": "支持小单吗 / Small orders?",
+    "faq2Content": "支持大小订单 / Yes, small & bulk orders",
+    "faq3Title": "物流多久 / Shipping time?",
+    "faq3Content": "空运 5–15 天 / 5–15 days by air"
+  },
+  "en": {
+    "title": "China Shop Buying Agent",
+    "description": "Buy anything from China\nTaobao · 1688 · Factory direct purchase",
+    "contact": "💬 Contact TG",
+    "channel": "📢 Join Channel",
+    "formTitle": "Fill Order Info",
+    "productLabel": "Product Link",
+    "quantityLabel": "Quantity",
+    "countryLabel": "Your Country",
+    "paymentLabel": "Payment Method",
+    "shippingLabel": "Shipping Method",
+    "submitBtn": "Submit & Contact TG",
+    "serviceTitle": "Services",
+    "service1": "Product sourcing from China",
+    "service2": "Payment & Quality Check",
+    "service3": "Wholesale & Factory Orders",
+    "service4": "International Shipping",
+    "processTitle": "How It Works",
+    "process1": "1️⃣ Send product link or photo",
+    "process2": "2️⃣ Get a full quotation",
+    "process3": "3️⃣ Make payment",
+    "process4": "4️⃣ We buy & inspect",
+    "process5": "5️⃣ Ship to your country",
+    "faqTitle": "FAQ",
+    "faq1Title": "What can you buy?",
+    "faq1Content": "Almost anything from China",
+    "faq2Title": "Small orders?",
+    "faq2Content": "Yes, small & bulk orders",
+    "faq3Title": "Shipping time?",
+    "faq3Content": "5–15 days by air"
+  },
+  "mn": {
+    "title": "Хятадын дэлгүүрийн захиалга / China Shop Buying Agent",
+    "description": "Хятад улсаас бараа авах амархан / Easy to buy from China\nTaobao · 1688 · Factory direct purchase",
+    "contact": "💬 TG рүү холбоо барих",
+    "channel": "📢 Суурин дээр орж, суурин бүсэд нэмэгдэх",
+    "formTitle": "Захиалгын мэдээллийг бөглөх",
+    "productLabel": "Барааны холбоос",
+    "quantityLabel": "Тоо хэмжээ",
+    "countryLabel": "Таны улс",
+    "paymentLabel": "Төлбөрийн арга",
+    "shippingLabel": "Тээврийн арга",
+    "submitBtn": "ТГ руу бичих / Submit & Contact TG",
+    "serviceTitle": "Үйлчилгээ / Services",
+    "service1": "Хятад улсаас бараа захиалах / Product sourcing from China",
+    "service2": "Төлбөр & чанарын шалгалт / Payment & Quality Check",
+    "service3": "Бөөний худалдаа / Wholesale & Factory Orders",
+    "service4": "Олон улсын тээвэрлэлтийн үйлчилгээ / International Shipping",
+    "processTitle": "Хэрхэн ажилладаг вэ / How It Works",
+    "process1": "1️⃣ Барааны холбоос эсвэл зураг / Send product link or photo",
+    "process2": "2️⃣ Үнийн санал авах / Get a full quotation",
+    "process3": "3️⃣ Төлбөр төлөх / Make payment",
+    "process4": "4️⃣ Бид барааг захиалж шалгах / We buy & inspect",
+    "process5": "5️⃣ Таны улсад хүргэх / Ship to your country",
+    "faqTitle": "Түгээмэл асуултууд / FAQ",
+    "faq1Title": "Юу худалдан авч болох вэ? / What can you buy?",
+    "faq1Content": "Хятад улсаас бараа ихэнх зүйлсийг авах боломжтой / Almost anything from China",
+    "faq2Title": "Жижиг захиалгыг дэмжих үү? / Small orders?",
+    "faq2Content": "Тийм, жижиг болон олон захиалга / Yes, small & bulk orders",
+    "faq3Title": "Тээврийн хугацаа хэр удаан вэ? / Shipping time?",
+    "faq3Content": "Тээврийн хугацаа 5-15 хоног / 5–15 days by air"
+  }
+};
+
+var currentLang = "zh"; // Default language
+
+function switchLanguage(langCode) {
+  currentLang = langCode;
+  document.getElementById("title").textContent = lang[currentLang].title;
+  document.getElementById("description").textContent = lang[currentLang].description;
+  document.getElementById("contact").textContent = lang[currentLang].contact;
+  document.getElementById("channel").textContent = lang[currentLang].channel;
+  document.getElementById("formTitle").textContent = lang[currentLang].formTitle;
+  document.getElementById("productLabel").textContent = lang[currentLang].productLabel;
+  document.getElementById("quantityLabel").textContent = lang[currentLang].quantityLabel;
+  document.getElementById("countryLabel").textContent = lang[currentLang].countryLabel;
+  document.getElementById("paymentLabel").textContent = lang[currentLang].paymentLabel;
+  document.getElementById("shippingLabel").textContent = lang[currentLang].shippingLabel;
+  document.getElementById("submitBtn").textContent = lang[currentLang].submitBtn;
+  document.getElementById("serviceTitle").textContent = lang[currentLang].serviceTitle;
+  document.getElementById("service1").textContent = lang[currentLang].service1;
+  document.getElementById("service2").textContent = lang[currentLang].service2;
+  document.getElementById("service3").textContent = lang[currentLang].service3;
+  document.getElementById("service4").textContent = lang[currentLang].service4;
+  document.getElementById("processTitle").textContent = lang[currentLang].processTitle;
+  document.getElementById("process1").textContent = lang[currentLang].process1;
+  document.getElementById("process2").textContent = lang[currentLang].process2;
+  document.getElementById("process3").textContent = lang[currentLang].process3;
+  document.getElementById("process4").textContent = lang[currentLang].process4;
+  document.getElementById("process5").textContent = lang[currentLang].process5;
+  document.getElementById("faqTitle").textContent = lang[currentLang].faqTitle;
+  document.getElementById("faq1Title").textContent = lang[currentLang].faq1Title;
+  document.getElementById("faq1Content").textContent = lang[currentLang].faq1Content;
+  document.getElementById("faq2Title").textContent = lang[currentLang].faq2Title;
+  document.getElementById("faq2Content").textContent = lang[currentLang].faq2Content;
+  document.getElementById("faq3Title").textContent = lang[currentLang].faq3Title;
+  document.getElementById("faq3Content").textContent = lang[currentLang].faq3Content;
+}
+</script>
+
 </body>
 </html>
