@@ -1,29 +1,379 @@
 <!DOCTYPE html>
-<html>
+<html lang="zh">
 <head>
-    <title>中国好物直发蒙古系统调试中</title>
-    <meta charset="utf-8">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>中蒙好物直通车 - 微信CHINASHOP888</title>
     <style>
-        body { font-family: Arial; max-width: 800px; margin: 50px auto; padding: 20px; }
-        .success { color: #4CAF50; font-weight: bold; }
-        .error { color: #f44336; }
-        .test-box { padding: 20px; background: #f9f9f9; border: 1px solid #ddd; margin: 20px 0; }
+        /* 全局样式 */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Arial', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+        }
+        
+        body {
+            background: #f8f8f8;
+            color: #333;
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 15px;
+        }
+        
+        /* 头部样式 */
+        header {
+            background: #e41b13;
+            padding: 15px 0;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .top-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: white;
+        }
+        
+        .logo {
+            font-size: 1.8rem;
+            font-weight: bold;
+            letter-spacing: 1px;
+        }
+        
+        .contact-info {
+            font-size: 1.2rem;
+        }
+        
+        /* 横幅样式 */
+        .banner {
+            height: 400px;
+            background: linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)), url('banner.jpg');
+            background-size: cover;
+            background-position: center;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            color: white;
+            padding: 20px;
+        }
+        
+        .banner h1 {
+            font-size: 3rem;
+            margin-bottom: 20px;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+        }
+        
+        .banner p {
+            font-size: 1.5rem;
+            max-width: 700px;
+            margin-bottom: 30px;
+        }
+        
+        .cta-button {
+            display: inline-block;
+            padding: 12px 35px;
+            background: #ffcc00;
+            color: #c00;
+            font-size: 1.3rem;
+            font-weight: bold;
+            text-decoration: none;
+            border-radius: 30px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+            transition: all 0.3s;
+        }
+        
+        .cta-button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 12px rgba(0,0,0,0.3);
+        }
+        
+        /* 商品样式 */
+        .section-title {
+            font-size: 2rem;
+            text-align: center;
+            margin: 40px 0 25px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #e41b13;
+            position: relative;
+        }
+        
+        .products-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 25px;
+            margin: 30px 0;
+        }
+        
+        .product-card {
+            background: white;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+            transition: transform 0.3s;
+        }
+        
+        .product-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+        
+        .product-image {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .product-details {
+            padding: 20px;
+        }
+        
+        .product-title {
+            font-size: 1.3rem;
+            font-weight: bold;
+            margin-bottom: 10px;
+            min-height: 60px;
+        }
+        
+        .product-description {
+            color: #666;
+            margin-bottom: 15px;
+        }
+        
+        .product-price {
+            font-size: 1.4rem;
+            font-weight: bold;
+            color: #e41b13;
+            margin: 10px 0;
+        }
+        
+        .product-stock {
+            color: #2ecc71;
+            margin-bottom: 15px;
+        }
+        
+        .order-button {
+            display: block;
+            background: #e41b13;
+            color: white;
+            text-align: center;
+            padding: 10px;
+            border-radius: 5px;
+            text-decoration: none;
+            font-weight: bold;
+            transition: background 0.3s;
+        }
+        
+        .order-button:hover {
+            background: #c21807;
+        }
+        
+        /* 联系方式 */
+        .contact-section {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+            margin: 40px 0;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-around;
+            align-items: center;
+        }
+        
+        .contact-method {
+            text-align: center;
+            margin: 15px;
+            flex: 1;
+            min-width: 250px;
+        }
+        
+        .contact-icon {
+            font-size: 2.5rem;
+            color: #e41b13;
+            margin-bottom: 15px;
+        }
+        
+        .contact-title {
+            font-size: 1.3rem;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        
+        .contact-info {
+            font-size: 1.2rem;
+            line-height: 1.8;
+        }
+        
+        .qr-code {
+            width: 200px;
+            height: 200px;
+            margin: 15px auto;
+            display: block;
+        }
+        
+        /* 底部样式 */
+        footer {
+            background: #333;
+            color: white;
+            padding: 30px 0;
+            text-align: center;
+            margin-top: 50px;
+        }
+        
+        .delivery-info {
+            margin: 20px 0;
+            font-size: 1.1rem;
+        }
+        
+        .copyright {
+            font-size: 0.9rem;
+            color: #aaa;
+        }
+
+        /* 蒙文样式 */
+        .mongolian {
+            font-family: "Mongolian Baiti", "Menk Hawang Tig", serif;
+            font-weight: normal;
+        }
+        
+        /* 响应式设计 */
+        @media (max-width: 768px) {
+            .top-bar {
+                flex-direction: column;
+                text-align: center;
+                gap: 10px;
+            }
+            
+            .banner h1 {
+                font-size: 2rem;
+            }
+            
+            .banner p {
+                font-size: 1.2rem;
+            }
+            
+            .products-grid {
+                grid-template-columns: 1fr;
+            }
+        }
     </style>
 </head>
 <body>
-    <h1>🇨🇳->🇲🇳 诊断页面</h1>
+    <!-- 头部 -->
+    <header>
+        <div class="container top-bar">
+            <div class="logo">中蒙代购商城</div>
+            <div class="contact-info">微信: CHINASHOP888 | 电话: +976-XXXXXXX</div>
+        </div>
+    </header>
     
-    <div class="test-box">
-        <h2 class="success">✓ 网站文件加载成功</h2>
-        <p>您的域名: <b>chinashop.de5.net</b></p>
+    <!-- 横幅区域 -->
+    <section class="banner">
+        <h1>中国好物 直达蒙古</h1>
+        <p>拼多多精选 · 厂家直邮 · 乌兰巴托3日达</p>
+        <p class="mongolian">Хятадын онцгой бүтээгдэхүүн Монголд шууд</p>
+        <a href="#products" class="cta-button">🔥 查看爆款商品 ➤</a>
+    </section>
+    
+    <div class="container">
+        <!-- 爆款商品 -->
+        <h2 class="section-title" id="products">🔥 热门爆款</h2>
+        
+        <div class="products-grid">
+            <!-- 产品 1 -->
+            <div class="product-card">
+                <img src="product1.jpg" alt="重庆麻辣火锅底料" class="product-image">
+                <div class="product-details">
+                    <h3 class="product-title">🍲 重庆老火锅底料 (500g×3袋)</h3>
+                    <p class="product-description">正宗牛油火锅底料，-30°C耐寒配方</p>
+                    <div class="product-price">8,500₮ (图格里克)</div>
+                    <p class="product-stock">⭐ 乌兰巴托现货 | 库存充足</p>
+                    <a href="#" class="order-button">微信下单</a>
+                </div>
+            </div>
+            
+            <!-- 产品 2 -->
+            <div class="product-card">
+                <img src="product2.jpg" alt="防寒军大衣" class="product-image">
+                <div class="product-details">
+                    <h3 class="product-title">🧥 加厚防寒军大衣 (-50°C适用)</h3>
+                    <p class="mongolian product-description">Хятадын цэргийн хүрэм</p>
+                    <div class="product-price">49,800₮</div>
+                    <p class="product-stock">✈️ 特惠包邮 | 3-5日达</p>
+                    <a href="#" class="order-button">微信下单</a>
+                </div>
+            </div>
+            
+            <!-- 产品 3 -->
+            <div class="product-card">
+                <img src="product3.jpg" alt="智能手机防冻壳" class="product-image">
+                <div class="product-details">
+                    <h3 class="product-title">📱 防冻手机壳 (-35℃适用)</h3>
+                    <p class="product-description">超薄防冻材质 | 触屏灵敏 | 多型号可选</p>
+                    <div class="product-price">5,900₮</div>
+                    <p class="product-stock">✅ 买2送1 | 多款可选</p>
+                    <a href="#" class="order-button">微信下单</a>
+                </div>
+            </div>
+            
+            <!-- 产品 4 -->
+            <div class="product-card">
+                <img src="product4.jpg" alt="电动车挡风被" class="product-image">
+                <div class="product-details">
+                    <h3 class="product-title">🛵 电动车防风保暖挡风被</h3>
+                    <p class="mongolian">Мотоциклийн халхавч халаагч</p>
+                    <div class="product-price">12,900₮</div>
+                    <p class="product-stock">🎁 送手套 | 5种颜色</p>
+                    <a href="#" class="order-button">微信下单</a>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 联系方式 -->
+        <div class="contact-section">
+            <div class="contact-method">
+                <div class="contact-icon">📱</div>
+                <h3 class="contact-title">微信下单咨询</h3>
+                <div class="contact-info">
+                    <p>微信号: <strong>CHINASHOP888</strong></p>
+                    <img src="wechat-qr.png" alt="微信二维码" class="qr-code">
+                    <p>扫码添加微信客服</p>
+                    <p>支持蒙语沟通</p>
+                    <p class="mongolian">Монгол хэлээр холбогдоно</p>
+                </div>
+            </div>
+            
+            <div class="contact-method">
+                <div class="contact-icon">🚚</div>
+                <h3 class="contact-title">配送信息</h3>
+                <div class="contact-info">
+                    <p>⚡ 乌兰巴托市区 <strong>3日</strong> 配送</p>
+                    <p>📦 全蒙古境 <strong>5-7日</strong> 物流</p>
+                    <p>💰 满50,000₮ 享免费配送</p>
+                    <p>💎 下单后微信实时推送物流</p>
+                </div>
+            </div>
+        </div>
     </div>
     
-    <div class="test-box">
-        <h2>下单方式</h2>
-        <p>微信: <b>CHINASHOP888</b></p>
-        <p>电话: <b>+976-XXX-XXXX</b></p>
-    </div>
-    
-    <p><a href="#">点击进入正式站点</a> (网站上线后替换此链接)</p>
+    <!-- 底部 -->
+    <footer>
+        <div class="container">
+            <p class="delivery-info">
+                中国仓库地址：广东省广州市白云区<br>
+                蒙古配送中心：Хүндэтгэлийн гудамж 8-р хороо, 1-р байр
+            </p>
+            <p>Copyright © 2023 chinashop.de5.net 中蒙代购商城</p>
+            <p class="copyright">微信: CHINASHOP888 | 蒙语客服热线: +976-XXXXXXX</p>
+        </div>
+    </footer>
 </body>
 </html>
