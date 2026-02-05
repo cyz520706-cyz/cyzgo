@@ -13,7 +13,15 @@
 #   Write an awesome description for your new site here. You can edit this line
 #   in _config.yml. It will appear in your document head meta (for Google search
 #   results) and in your feed.xml site description.
+# 在文件末尾添加：
+plugins: []
+exclude:
+  - Gemfile
+  - Gemfile.lock
+  - vendor
 
+# 禁用RSS订阅（引发feed_meta的主因）
+feed: false
 
 # Build settings
 # --------------
