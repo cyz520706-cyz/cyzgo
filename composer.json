@@ -1,0 +1,7 @@
+{
+    "name": "telegram-bot-cyzgo",
+    "description": "Telegram Bot Webhook for cyzgo",
+    "require": {
+        "php": ">=8.0"
+    }
+}
