@@ -21,19 +21,6 @@ function checkSecurity() {
         }
     }
 }
-checkSecurity();   // ← 记得调用一次
-// 临时简化验证（仅用于测试）
-function checkSecurity() {
-    // 直接放行，不再做Basic-Auth验证
-    if (!isset($_SESSION['admin_logged_in'])) {
-        if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['login_token'] ?? '') === 'valid') {
-            $_SESSION['admin_logged_in'] = true;
-        } else {
-            showLoginForm();
-            exit;
-        }
-    }
-}
 
 // 登录表单
 function showLoginForm() {
