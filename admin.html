@@ -1,0 +1,158 @@
+<!-- admin.html - 简单的管理后台 -->
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>订单管理系统</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; background: #f5f5f5; }
+        .container { max-width: 1200px; margin: 0 auto; background: white; padding: 20px; border-radius: 10px; }
+        h1 { color: #2AABEE; border-bottom: 2px solid #2AABEE; padding-bottom: 10px; }
+        .stats { display: flex; gap: 15px; margin: 20px 0; }
+        .stat-card { flex: 1; background: #e8f4fd; padding: 15px; border-radius: 8px; text-align: center; }
+        .orders { margin-top: 30px; }
+        .order-card { border: 1px solid #ddd; padding: 15px; margin: 10px 0; border-radius: 8px; background: #f9f9f9; }
+        .status-pending { color: orange; font-weight: bold; }
+        .status-processing { color: blue; font-weight: bold; }
+        .status-completed { color: green; font-weight: bold; }
+        .btn { padding: 8px 15px; background: #2AABEE; color: white; border: none; border-radius: 4px; cursor: pointer; }
+        .btn:hover { background: #228acd; }
+        .filter { margin-bottom: 20px; }
+        .filter button { margin-right: 10px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📊 中蒙代购订单管理系统</h1>
+        
+        <div class="stats">
+            <div class="stat-card">
+                <h3>总订单数</h3>
+                <h2 id="total-orders">0</h2>
+            </div>
+            <div class="stat-card">
+                <h3>待处理</h3>
+                <h2 id="pending-orders">0</h2>
+            </div>
+            <div class="stat-card">
+                <h3>处理中</h3>
+                <h2 id="processing-orders">0</h2>
+            </div>
+            <div class="stat-card">
+                <h3>已完成</h3>
+                <h2 id="completed-orders">0</h2>
+            </div>
+        </div>
+        
+        <div class="filter">
+            <button onclick="loadOrders('all')" class="btn">全部订单</button>
+            <button onclick="loadOrders('pending')" class="btn">待处理</button>
+            <button onclick="loadOrders('processing')" class="btn">处理中</button>
+            <button onclick="loadOrders('completed')" class="btn">已完成</button>
+        </div>
+        
+        <div class="orders" id="orders-container">
+            <!-- 订单会在这里显示 -->
+        </div>
+    </div>
+    
+    <script>
+        // 密码保护（简单版）
+        const ADMIN_PASSWORD = 'chinashop123'; // 你可以修改密码
+        
+        function checkPassword() {
+            const password = prompt('请输入管理员密码:');
+            if (password !== ADMIN_PASSWORD) {
+                alert('密码错误！');
+                window.location.href = '/'; // 跳回首页
+                return false;
+            }
+            return true;
+        }
+        
+        // 页面加载时检查密码
+        window.onload = function() {
+            if (!checkPassword()) return;
+            loadOrders();
+            setInterval(loadOrders, 10000); // 每10秒刷新
+        };
+        
+        // 加载订单
+        async function loadOrders(filter = 'all') {
+            try {
+                // 从服务器获取订单数据
+                const response = await fetch('orders.json?t=' + Date.now());
+                const data = await response.json();
+                
+                // 更新统计数据
+                const allOrders = data.orders || [];
+                document.getElementById('total-orders').textContent = allOrders.length;
+                document.getElementById('pending-orders').textContent = 
+                    allOrders.filter(o => o.status === 'pending').length;
+                document.getElementById('processing-orders').textContent = 
+                    allOrders.filter(o => o.status === 'processing').length;
+                document.getElementById('completed-orders').textContent = 
+                    allOrders.filter(o => o.status === 'completed').length;
+                
+                // 过滤订单
+                let filteredOrders = allOrders;
+                if (filter !== 'all') {
+                    filteredOrders = allOrders.filter(o => o.status === filter);
+                }
+                
+                // 显示订单
+                const container = document.getElementById('orders-container');
+                container.innerHTML = filteredOrders.map(order => `
+                    <div class="order-card">
+                        <div style="display: flex; justify-content: space-between;">
+                            <div>
+                                <strong>订单ID:</strong> ${order.id}
+                                <span class="status-${order.status}">[${getStatusText(order.status)}]</span>
+                            </div>
+                            <div>
+                                <strong>时间:</strong> ${new Date(order.timestamp).toLocaleString('zh-CN')}
+                            </div>
+                        </div>
+                        <div style="margin: 10px 0;">
+                            <strong>用户:</strong> @${order.username} (${order.user_id})
+                        </div>
+                        <div style="margin: 10px 0;">
+                            <strong>商品:</strong> ${order.product_link}
+                        </div>
+                        <div style="margin: 10px 0;">
+                            <strong>详情:</strong> ${order.details}
+                        </div>
+                        <div style="margin: 15px 0;">
+                            ${order.status === 'pending' ? 
+                                `<button onclick="updateOrder('${order.id}', 'processing')" class="btn">接单</button>` : ''}
+                            ${order.status === 'processing' ? 
+                                `<button onclick="updateOrder('${order.id}', 'completed')" class="btn">完成</button>` : ''}
+                        </div>
+                    </div>
+                `).join('');
+                
+            } catch (error) {
+                console.log('还没有订单数据');
+                document.getElementById('orders-container').innerHTML = '<p>还没有订单数据</p>';
+            }
+        }
+        
+        function getStatusText(status) {
+            const statusMap = {
+                'pending': '待处理',
+                'processing': '处理中',
+                'completed': '已完成'
+            };
+            return statusMap[status] || status;
+        }
+        
+        function updateOrder(orderId, newStatus) {
+            if (!confirm('确认更新订单状态？')) return;
+            
+            // 这里应该发送到服务器更新状态
+            alert(`订单 ${orderId} 状态更新为 ${newStatus}`);
+            loadOrders();
+        }
+    </script>
+</body>
+</html>
