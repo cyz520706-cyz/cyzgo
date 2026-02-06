@@ -1,0 +1,50 @@
+cat > admin_simple.html << 'EOF'
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>简单日志查看器</title>
+    <style>
+        body { font-family: Arial; padding: 20px; }
+        .log { background: #f0f0f0; padding: 10px; margin: 5px; border-left: 4px solid blue; }
+    </style>
+</head>
+<body>
+    <h1>日志查看器</h1>
+    <button onclick="location.reload()">刷新</button>
+    <hr>
+    
+    <div id="logs">
+        <p>正在加载...</p>
+    </div>
+    
+    <script>
+        // 直接嵌入日志数据
+        fetch('api.php?action=get_logs')
+            .then(r => r.json())
+            .then(data => {
+                const logsDiv = document.getElementById('logs');
+                if (data.success && data.logs.length > 0) {
+                    let html = '';
+                    data.logs.forEach(log => {
+                        html += `<div class="log">
+                            <strong>[${log.time}]</strong>
+                            ${log.message}
+                        </div>`;
+                    });
+                    logsDiv.innerHTML = html;
+                } else {
+                    logsDiv.innerHTML = '<p>暂无日志</p>';
+                }
+            })
+            .catch(err => {
+                document.getElementById('logs').innerHTML = 
+                    '<p>加载失败: ' + err.message + '</p>';
+            });
+    </script>
+</body>
+</html>
+EOF
+
+echo "✅ admin_simple.html 已创建"
+echo "访问: https://cyzgo.onrender.com/admin_simple.html"
