@@ -57,6 +57,47 @@ class LogDB {
         $stmt->bindValue(3, json_encode($context, JSON_UNESCAPED_UNICODE), SQLITE3_TEXT);
         $stmt->execute();
     }
+
+    // ✅ 新增 query() 方法
+    public function query(string $sql, array $params = []): SQLite3Result|false {
+        if (empty($params)) {
+            return $this->db->query($sql);
+        }
+        
+        $stmt = $this->db->prepare($sql);
+        if (!$stmt) {
+            return false;
+        }
+        
+        // 绑定参数（从1开始索引）
+        $i = 1;
+        foreach ($params as $param) {
+            $stmt->bindValue($i++, $param, SQLITE3_TEXT);
+        }
+        
+        return $stmt->execute();
+    }
+
+    // ✅ 新增 exec() 方法（用于执行不需要返回结果的SQL）
+    public function exec(string $sql): bool {
+        return $this->db->exec($sql);
+    }
+
+    // ✅ 新增 close() 方法（可选）
+    public function close(): void {
+        if ($this->db) {
+            $this->db->close();
+        }
+    }
+}
+
+    public function write(string $level, string $message, array $context = []): void {
+        $stmt = $this->db->prepare('INSERT INTO logs (level, message, context) VALUES (?, ?, ?)');
+        $stmt->bindValue(1, $level, SQLITE3_TEXT);
+        $stmt->bindValue(2, $message, SQLITE3_TEXT);
+        $stmt->bindValue(3, json_encode($context, JSON_UNESCAPED_UNICODE), SQLITE3_TEXT);
+        $stmt->execute();
+    }
 }
 
 // 5. 合并后的 checkSecurity 函数
