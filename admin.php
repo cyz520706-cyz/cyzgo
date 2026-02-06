@@ -1,5 +1,9 @@
 <?php
-// admin.php - 完整合并版本
+// admin.php - 完全修复版本
+
+// 开启错误报告（生产环境中请移除）
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
 
 // 1. 常量定义
 if (!defined('LOG_DB_PATH')) {
@@ -23,7 +27,7 @@ if (!session_id()) {
     session_regenerate_id(true);
 }
 
-// 4. LogDB 类定义
+// 4. LogDB类定义
 class LogDB {
     private static $instance = null;
     private $db;
@@ -58,7 +62,6 @@ class LogDB {
         $stmt->execute();
     }
 
-    // ✅ 新增 query() 方法
     public function query(string $sql, array $params = []): SQLite3Result|false {
         if (empty($params)) {
             return $this->db->query($sql);
@@ -69,7 +72,6 @@ class LogDB {
             return false;
         }
         
-        // 绑定参数（从1开始索引）
         $i = 1;
         foreach ($params as $param) {
             $stmt->bindValue($i++, $param, SQLITE3_TEXT);
@@ -78,56 +80,39 @@ class LogDB {
         return $stmt->execute();
     }
 
-    // ✅ 新增 exec() 方法（用于执行不需要返回结果的SQL）
     public function exec(string $sql): bool {
         return $this->db->exec($sql);
     }
 
-    // ✅ 新增 close() 方法（可选）
     public function close(): void {
         if ($this->db) {
             $this->db->close();
         }
     }
 }
+// ✅ 这里类定义正确结束
 
-    public function write(string $level, string $message, array $context = []): void {
-        $stmt = $this->db->prepare('INSERT INTO logs (level, message, context) VALUES (?, ?, ?)');
-        $stmt->bindValue(1, $level, SQLITE3_TEXT);
-        $stmt->bindValue(2, $message, SQLITE3_TEXT);
-        $stmt->bindValue(3, json_encode($context, JSON_UNESCAPED_UNICODE), SQLITE3_TEXT);
-        $stmt->execute();
-    }
-}
-
-// 5. 合并后的 checkSecurity 函数
+// 5. checkSecurity函数（不是类方法，所以没有public关键字）
 function checkSecurity(): void {
-    // 如果已登录，直接放行
     if (isset($_SESSION['admin_logged_in']) && $_SESSION['admin_logged_in'] === true) {
-        return; // 已经登录，继续执行后面的代码
+        return;
     }
 
-    // 未登录时的处理
     if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $token = $_POST['login_token'] ?? '';
         $pwd   = $_POST['password']   ?? '';
         
-        // 简化的登录验证（测试用）
         if ($token === 'valid' && $pwd === 'admin123') {
             $_SESSION['admin_logged_in'] = true;
-            // 记录登录日志
             LogDB::getInstance()->write('INFO', 'Admin login successful', ['ip'=>$_SERVER['REMOTE_ADDR']??'unknown']);
-            // 重新加载页面
             header('Location: ' . $_SERVER['REQUEST_URI']);
             exit;
         } else {
-            // 登录失败提示
             showLoginForm('密码错误，请重试');
             exit;
         }
     }
 
-    // 首次访问或GET请求显示登录表单
     showLoginForm();
     exit;
 }
@@ -142,7 +127,7 @@ function showLoginForm(string $error = ''): void {
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>', htmlspecialchars($title), '</title>
+<title>' . htmlspecialchars($title) . '</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <style>
  body{margin:0;font-family:"Microsoft YaHei", sans-serif;background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);height:100vh;display:flex;align-items:center;justify-content:center;}
@@ -159,14 +144,14 @@ function showLoginForm(string $error = ''): void {
 <div class="card">
 <h1><i class="fas fa-shield-alt"></i> 管理员登录</h1>';
     if (!empty($error)) {
-        echo '<div class="error"><i class="fas fa-exclamation-triangle"></i> ', htmlspecialchars($error), '</div>';
+        echo '<div class="error"><i class="fas fa-exclamation-triangle"></i> ' . htmlspecialchars($error) . '</div>';
     }
     echo '<form method="POST">
 <input type="hidden" name="login_token" value="valid">
 <input type="password" name="password" placeholder="请输入管理员密码" required>
 <button type="submit"><i class="fas fa-sign-in-alt"></i> 登录</button>
 </form>
-<div class="hint">', htmlspecialchars($hint), '</div>
+<div class="hint">' . htmlspecialchars($hint) . '</div>
 </div>
 </body>
 </html>';
@@ -175,7 +160,7 @@ function showLoginForm(string $error = ''): void {
 // 7. 执行安全检查
 checkSecurity();
 
-// 8. 管理后台页面（示例）
+// 8. 管理后台页面
 ?>
 <!DOCTYPE html>
 <html lang="zh-CN">
@@ -193,6 +178,7 @@ checkSecurity();
  table{width:100%;border-collapse:collapse;}
  th,td{border-bottom:1px solid #e2e8f0;padding:10px;text-align:left;}
  tr:hover{background:#f9fafb;}
+ .status{color:#38a169;font-weight:bold;}
 </style>
 </head>
 <body>
@@ -202,9 +188,11 @@ checkSecurity();
 
 <div class="container">
     <div class="card">
-        <h2>系统信息</h2>
+        <h2>系统状态</h2>
+        <p class="status">✅ 系统运行正常</p>
         <p>PHP 版本：<?php echo PHP_VERSION; ?></p>
         <p>服务器时间：<?php echo date('Y-m-d H:i:s'); ?></p>
+        <p>数据库路径：<?php echo LOG_DB_PATH; ?></p>
     </div>
 
     <div class="card">
@@ -213,14 +201,24 @@ checkSecurity();
         $logDB = LogDB::getInstance();
         $res = $logDB->query('SELECT * FROM logs ORDER BY id DESC LIMIT 10');
         echo '<table><thead><tr><th>ID</th><th>时间</th><th>级别</th><th>信息</th><th>上下文</th></tr></thead><tbody>';
-        while ($row = $res->fetchArray(SQLITE3_ASSOC)) {
-            echo '<tr>';
-            echo '<td>'.htmlspecialchars($row['id']).'</td>';
-            echo '<td>'.htmlspecialchars($row['timestamp']).'</td>';
-            echo '<td>'.htmlspecialchars($row['level']).'</td>';
-            echo '<td>'.htmlspecialchars($row['message']).'</td>';
-            echo '<td>'.htmlspecialchars($row['context']).'</td>';
-            echo '</tr>';
+        
+        if ($res) {
+            $count = 0;
+            while ($row = $res->fetchArray(SQLITE3_ASSOC)) {
+                $count++;
+                echo '<tr>';
+                echo '<td>'.htmlspecialchars($row['id']).'</td>';
+                echo '<td>'.htmlspecialchars($row['timestamp']).'</td>';
+                echo '<td>'.htmlspecialchars($row['level']).'</td>';
+                echo '<td>'.htmlspecialchars($row['message']).'</td>';
+                echo '<td>'.htmlspecialchars($row['context']).'</td>';
+                echo '</tr>';
+            }
+            if ($count === 0) {
+                echo '<tr><td colspan="5">暂无日志数据</td></tr>';
+            }
+        } else {
+            echo '<tr><td colspan="5">数据库查询失败</td></tr>';
         }
         echo '</tbody></table>';
         ?>
@@ -228,7 +226,8 @@ checkSecurity();
 
     <div class="card">
         <h2>快速操作</h2>
-        <p>这里可以放你自己的功能按钮、链接等。</p>
+        <p>这里可以放置您的自定义功能按钮和链接。</p>
+        <p><a href="#" style="color:#667eea;">功能1</a> | <a href="#" style="color:#667eea;">功能2</a> | <a href="#" style="color:#667eea;">功能3</a></p>
     </div>
 </div>
 
