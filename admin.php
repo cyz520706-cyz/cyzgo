@@ -1,58 +1,12 @@
 <?php
-// ===========================================
-// admin.php - 安全、功能完整的管理面板
-// ===========================================
-
-// 基础设置
-date_default_timezone_set('Asia/Shanghai');
-ini_set('default_charset', 'UTF-8');
-mb_internal_encoding('UTF-8');
-ini_set('log_errors', 1);
-ini_set('error_log', __DIR__ . '/php_errors.log');
-
-// 开启会话并实现基本认证
 session_start();
 
-// 配置变量（请根据实际情况修改）
-define('LOG_DB_PATH', __DIR__ . '/bot.sqlite');   // SQLite 数据库路径
-define('LOG_FILE_BACKUP_DIR', __DIR__ . '/backup'); // 备份目录
-define('ADMIN_SESSION_NAME', 'admin_logged_in');
-define('ALLOWED_IPS', ['127.0.0.1', '::1']); // 可访问的IP白名单
-
-// -------------------------------
-// 1️⃣ 安全：IP 白名单 + 会话认证
-// -------------------------------
+// 临时简化验证（仅用于测试）
 function checkSecurity() {
-    // IP 白名单检查
-    $clientIP = $_SERVER['HTTP_X_FORWARDED_FOR'] ?? $_SERVER['REMOTE_ADDR'] ?? '';
-    $clientIP = trim(explode(',', $clientIP)[0]); // 处理代理
-    
-    if (!in_array($clientIP, ALLOWED_IPS) && !in_array('*', ALLOWED_IPS)) {
-        // 如果不是允许的IP，尝试基本认证
-        if (!isset($_SERVER['PHP_AUTH_USER'])) {
-            header('HTTP/1.1 401 Unauthorized');
-            header('WWW-Authenticate: Basic realm="Admin Panel"');
-            echo 'Unauthorized';
-            exit;
-        }
-        
-        // 基本认证验证（用户名/密码请自行修改）
-        $valid_users = [
-            'admin' => password_hash('cyz661570', PASSWORD_DEFAULT) // 请修改默认密码
-        ];
-        
-        if (!isset($valid_users[$_SERVER['PHP_AUTH_USER']]) || 
-            !password_verify($_SERVER['PHP_AUTH_PWD'] ?? '', $valid_users[$_SERVER['PHP_AUTH_USER']])) {
-            header('HTTP/1.1 401 Unauthorized');
-            echo 'Invalid credentials';
-            exit;
-        }
-    }
-    
-    // 会话认证（一次登录后保持）
-    if (!isset($_SESSION[ADMIN_SESSION_NAME])) {
+    // 直接放行，不再做Basic-Auth验证
+    if (!isset($_SESSION['admin_logged_in'])) {
         if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['login_token'] ?? '') === 'valid') {
-            $_SESSION[ADMIN_SESSION_NAME] = true;
+            $_SESSION['admin_logged_in'] = true;
         } else {
             showLoginForm();
             exit;
