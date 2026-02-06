@@ -1,6 +1,3 @@
-cd /var/www/html
-
-cat > admin.php << 'EOF'
 <?php
 // admin.php - 完整可用的管理面板
 header('Content-Type: text/html; charset=utf-8');
@@ -378,6 +375,3 @@ if (isset($_GET['ajax']) || isset($_POST['ajax'])) {
 ob_end_flush();
 ?>
 EOF
-
-echo "✅ admin.php 已创建！"
-echo "请立即访问: https://cyzgo.onrender.com/admin.php"
