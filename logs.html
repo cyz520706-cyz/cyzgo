@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>纯日志查看器</title>
+    <style>
+        body { font-family: Arial; margin: 0; padding: 20px; background: #f5f5f5; }
+        #logDisplay {
+            background: white; 
+            padding: 15px; 
+            border-radius: 5px;
+            font-family: monospace;
+            white-space: pre-wrap;
+            word-break: break-all;
+            max-height: 80vh;
+            overflow-y: auto;
+            border: 1px solid #ddd;
+        }
+        button { 
+            padding: 10px 20px; 
+            background: #4CAF50; 
+            color: white; 
+            border: none; 
+            border-radius: 3px; 
+            cursor: pointer; 
+            margin: 5px;
+        }
+    </style>
+</head>
+<body>
+    <h1>📜 日志内容</h1>
+    <button onclick="loadLogs()">刷新</button>
+    <div id="logDisplay">正在加载...</div>
+    
+    <script>
+    async function loadLogs() {
+        try {
+            const response = await fetch('raw_logs.php');
+            const text = await response.text();
+            document.getElementById('logDisplay').textContent = text || '暂无日志';
+        } catch (error) {
+            document.getElementById('logDisplay').textContent = '加载失败: ' + error.message;
+        }
+    }
+    
+    loadLogs();
+    </script>
+</body>
+</html>
+EOF
+# 6. 创建 raw_logs.php
+cat > raw_logs.php << 'EOF'
+<?php
+$log_file = 'telegram_webhook.log';
+if (file_exists($log_file)) {
+    echo file_get_contents($log_file);
+} else {
+    echo '日志文件不存在';
+}
+?>
