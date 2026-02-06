@@ -1,377 +1,485 @@
 <?php
-// admin.php - 完整可用的管理面板
-header('Content-Type: text/html; charset=utf-8');
-ob_start();
-
-// ==================== AJAX处理器 ====================
-if (isset($_GET['ajax']) || isset($_POST['ajax'])) {
-    $action = $_REQUEST['action'] ?? 'get_logs';
-    $log_file = 'telegram_webhook.log';
-    
-    // 设置JSON响应头
-    header('Content-Type: application/json; charset=utf-8');
-    
-    switch($action) {
-        case 'get_logs':
-            $logs = [];
-            if (file_exists($log_file)) {
-                $content = file_get_contents($log_file);
-                $lines = array_filter(explode("\n", trim($content)));
-                
-                foreach ($lines as $line) {
-                    if (empty(trim($line))) continue;
-                    
-                    // 简单解析日志行
-                    $type = (strpos($line, '用户消息') !== false) ? 'user' : 'bot';
-                    preg_match('/\[(.*?)\]/', $line, $time_match);
-                    $time = $time_match[1] ?? date('H:i:s');
-                    
-                    // 解码Unicode
-                    $message = $line;
-                    $message = preg_replace_callback('/\\\\u([0-9a-fA-F]{4})/', function($match) {
-                        return mb_convert_encoding(pack('H*', $match[1]), 'UTF-8', 'UCS-2BE');
-                    }, $message);
-                    
-                    $logs[] = [
-                        'time' => $time,
-                        'message' => htmlspecialchars($message),
-                        'type' => $type
-                    ];
-                }
-                
-                // 只取最后50条并反转（最新的在前）
-                $logs = array_slice(array_reverse($logs), 0, 50);
-            }
-            
-            echo json_encode([
-                'success' => true,
-                'total' => count($logs),
-                'logs' => $logs
-            ], JSON_UNESCAPED_UNICODE);
-            exit;
-            
-        case 'clear_logs':
-            if (file_exists($log_file)) {
-                file_put_contents($log_file, '');
-            }
-            echo json_encode(['success' => true]);
-            exit;
-            
-        case 'get_stats':
-            $stats = ['total' => 0, 'today' => 0, 'latest' => ''];
-            if (file_exists($log_file)) {
-                $lines = file($log_file, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
-                $stats['total'] = count($lines);
-                
-                // 统计今天的消息
-                $today = date('Y-m-d');
-                foreach ($lines as $line) {
-                    if (strpos($line, "[$today") === 0) {
-                        $stats['today']++;
-                    }
-                }
-                
-                // 获取最新一条
-                if (!empty($lines)) {
-                    $stats['latest'] = end($lines);
-                }
-            }
-            echo json_encode(['success' => true, 'stats' => $stats], JSON_UNESCAPED_UNICODE);
-            exit;
-            
-        default:
-            echo json_encode(['success' => false, 'error' => '未知操作']);
-            exit;
-    }
-}
-
-// ==================== HTML界面 ====================
+$log_file = 'telegram_webhook.log';
 ?>
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html>
 <head>
     <meta charset="UTF-8">
+    <title>🤖 中蒙代购机器人管理</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🤖 中蒙代购机器人 - 管理面板</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
+        /* 移动端优化 */
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: "Microsoft YaHei", sans-serif; background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); min-height: 100vh; }
-        .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
-        
-        .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; border-radius: 15px; margin-bottom: 20px; text-align: center; }
-        .header h1 { font-size: 2.2rem; margin-bottom: 10px; display: flex; align-items: center; justify-content: center; gap: 15px; }
-        
-        .controls { display: flex; gap: 15px; padding: 20px; background: white; border-radius: 10px; margin-bottom: 20px; flex-wrap: wrap; justify-content: center; }
-        .btn { padding: 12px 24px; background: #667eea; color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 16px; text-decoration: none; display: inline-flex; align-items: center; gap: 8px; }
-        .btn:hover { background: #5a67d8; transform: translateY(-2px); transition: all 0.3s; }
-        .btn-danger { background: #e53e3e; }
-        .btn-danger:hover { background: #c53030; }
-        .btn-success { background: #38a169; }
-        .btn-success:hover { background: #2f855a; }
-        
-        .content { background: white; border-radius: 10px; padding: 25px; margin-bottom: 20px; }
-        .section-title { font-size: 1.4rem; margin-bottom: 15px; color: #2d3748; display: flex; align-items: center; gap: 10px; }
-        
-        .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 25px; }
-        .stat-card { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px; border-radius: 10px; text-align: center; }
-        .stat-number { font-size: 2rem; font-weight: bold; }
-        .stat-label { font-size: 14px; opacity: 0.9; }
-        
-        .logs-container { background: #1a202c; border-radius: 10px; padding: 20px; color: white; font-family: monospace; max-height: 500px; overflow-y: auto; margin-top: 15px; }
-        .log-entry { padding: 10px; margin-bottom: 8px; border-left: 4px solid #667eea; background: rgba(255,255,255,0.05); word-break: break-word; }
-        .log-entry.user { border-left-color: #4299e1; }
-        .log-entry.bot { border-left-color: #48bb78; }
-        .log-time { color: #a0aec0; font-size: 12px; margin-right: 10px; }
-        
-        .loading { text-align: center; padding: 30px; }
-        .spinner { border: 4px solid rgba(0,0,0,0.1); border-radius: 50%; border-top: 4px solid #667eea; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 0 auto 15px; }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-        
-        .footer { text-align: center; padding: 20px; color: #718096; }
-        
-        @media (max-width: 768px) {
-            .header h1 { font-size: 1.6rem; }
-            .controls { flex-direction: column; }
-            .btn { justify-content: center; }
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
         }
+        .container {
+            max-width: 100%;
+            background: rgba(255,255,255,0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 25px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 25px;
+            padding-bottom: 20px;
+            border-bottom: 3px solid #667eea;
+        }
+        .logo {
+            font-size: 3em;
+            margin-bottom: 10px;
+        }
+        h1 {
+            color: #333;
+            font-size: 1.8em;
+            margin-bottom: 5px;
+        }
+        .subtitle {
+            color: #666;
+            font-size: 1em;
+        }
+        .stats-card {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+        }
+        .stat-item {
+            text-align: center;
+        }
+        .stat-number {
+            font-size: 2em;
+            font-weight: bold;
+            display: block;
+        }
+        .stat-label {
+            font-size: 0.9em;
+            opacity: 0.9;
+        }
+        .controls {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin: 20px 0;
+            justify-content: center;
+        }
+        .btn {
+            padding: 12px 25px;
+            border: none;
+            border-radius: 50px;
+            font-size: 1em;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s ease;
+            min-width: 120px;
+            justify-content: center;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        .btn-danger {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+        }
+        .btn-success {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+        }
+        .btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+        }
+        .btn:active {
+            transform: translateY(-1px);
+        }
+        .logs-container {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 20px;
+            margin-top: 20px;
+            max-height: 500px;
+            overflow-y: auto;
+        }
+        .log-message {
+            background: white;
+            margin: 15px 0;
+            padding: 18px;
+            border-radius: 12px;
+            border-left: 5px solid #667eea;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.08);
+            animation: slideIn 0.3s ease;
+        }
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .log-time {
+            color: #f5576c;
+            font-size: 0.85em;
+            font-weight: bold;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .log-content {
+            color: #333;
+            line-height: 1.6;
+            word-break: break-word;
+        }
+        .user-message {
+            border-left-color: #4CAF50;
+        }
+        .bot-message {
+            border-left-color: #2196F3;
+        }
+        .url-message {
+            border-left-color: #FF9800;
+        }
+        .url-link {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: bold;
+        }
+        .url-link:hover {
+            text-decoration: underline;
+        }
+        .empty-logs {
+            text-align: center;
+            padding: 40px;
+            color: #999;
+        }
+        .loading {
+            text-align: center;
+            padding: 30px;
+        }
+        .loading-spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        @media (max-width: 768px) {
+            body { padding: 10px; }
+            .container { padding: 15px; }
+            .btn { min-width: 100%; margin: 5px 0; }
+            .controls { flex-direction: column; }
+            .stat-number { font-size: 1.5em; }
+        }
+        .json-toggle {
+            background: #f1f1f1;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 5px;
+            margin-top: 10px;
+            cursor: pointer;
+            font-size: 0.8em;
+            color: #666;
+        }
+        .json-content {
+            background: #1e1e1e;
+            color: #d4d4d4;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 10px;
+            font-family: 'Consolas', monospace;
+            font-size: 0.9em;
+            overflow-x: auto;
+            display: none;
+        }
+        .json-content.show {
+            display: block;
+        }
+        .json-key { color: #9cdcfe; }
+        .json-string { color: #ce9178; }
+        .json-number { color: #b5cea8; }
+        .json-boolean { color: #569cd6; }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="header">
-            <h1><i class="fas fa-robot"></i> 中蒙代购机器人管理面板</h1>
-            <p>实时监控对话日志，管理机器人状态</p>
+            <div class="logo">🤖</div>
+            <h1>中蒙代购机器人管理</h1>
+            <div class="subtitle">实时监控与管理系统</div>
+        </div>
+        
+        <div class="stats-card">
+            <div class="stat-item">
+                <span class="stat-number" id="online-status">🟢</span>
+                <span class="stat-label">在线状态</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-number" id="total-logs">0</span>
+                <span class="stat-label">日志数量</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-number" id="today-logs">0</span>
+                <span class="stat-label">今日消息</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-number" id="active-users">0</span>
+                <span class="stat-label">活跃用户</span>
+            </div>
         </div>
         
         <div class="controls">
-            <button class="btn" onclick="loadLogs()" id="refreshBtn">
-                <i class="fas fa-sync-alt"></i> 刷新日志
+            <button class="btn btn-primary" onclick="loadLogs()">
+                <span>🔄</span>刷新日志
+            </button>
+            <button class="btn btn-success" onclick="testWebhook()">
+                <span>📡</span>测试Webhook
             </button>
             <button class="btn btn-danger" onclick="clearLogs()">
-                <i class="fas fa-trash-alt"></i> 清空日志
+                <span>🗑️</span>清空日志
             </button>
-            <button class="btn btn-success" onclick="loadStats()">
-                <i class="fas fa-chart-bar"></i> 更新统计
+            <button class="btn btn-primary" onclick="exportLogs()">
+                <span>📥</span>导出日志
             </button>
-            <a href="webhook.php" class="btn">
-                <i class="fas fa-home"></i> 返回主页
-            </a>
         </div>
         
-        <div class="content">
-            <div class="section-title"><i class="fas fa-chart-line"></i> 统计数据</div>
-            <div class="stats" id="statsContainer">
-                <div class="stat-card">
-                    <div class="stat-number" id="totalMessages">0</div>
-                    <div class="stat-label">总消息数</div>
-                </div>
-                <div class="stat-card" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
-                    <div class="stat-number" id="todayMessages">0</div>
-                    <div class="stat-label">今日消息</div>
-                </div>
-                <div class="stat-card" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
-                    <div class="stat-number" id="logSize">0 KB</div>
-                    <div class="stat-label">日志大小</div>
-                </div>
-                <div class="stat-card" style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%); color: #333;">
-                    <div class="stat-number" id="lastUpdate"><?php echo date('H:i'); ?></div>
-                    <div class="stat-label">最后更新</div>
-                </div>
+        <div class="logs-container" id="logsContainer">
+            <div class="loading">
+                <div class="loading-spinner"></div>
+                <p>正在加载日志...</p>
             </div>
-            
-            <div class="section-title"><i class="fas fa-comments"></i> 对话日志</div>
-            <div style="margin-bottom: 15px; display: flex; gap: 10px; align-items: center;">
-                <label><input type="checkbox" id="showUser" checked onchange="loadLogs()"> 用户消息</label>
-                <label><input type="checkbox" id="showBot" checked onchange="loadLogs()"> 机器人回复</label>
-                <input type="text" id="searchInput" placeholder="搜索消息..." style="flex-grow: 1; padding: 8px; border: 1px solid #e2e8f0; border-radius: 5px;" onkeyup="loadLogs()">
-            </div>
-            
-            <div id="logsContainer" class="logs-container">
-                <div class="loading">
-                    <div class="spinner"></div>
-                    <p>正在加载日志...</p>
-                </div>
-            </div>
-            
-            <div style="text-align: center; margin-top: 15px; color: #718096; font-size: 14px;">
-                <i class="fas fa-info-circle"></i> 自动刷新: <span id="countdown">30</span>秒
-            </div>
-        </div>
-        
-        <div class="footer">
-            <p><i class="fas fa-server"></i> Apache/PHP | <i class="fas fa-clock"></i> <?php echo date('Y-m-d H:i:s'); ?></p>
         </div>
     </div>
-
+    
     <script>
-        let autoRefreshTimer = 30;
-        let countdownInterval;
+    async function loadLogs() {
+        const container = document.getElementById('logsContainer');
+        container.innerHTML = '<div class="loading"><div class="loading-spinner"></div><p>正在加载...</p></div>';
         
-        // 页面加载完成
-        document.addEventListener('DOMContentLoaded', function() {
-            loadStats();
-            loadLogs();
-            startAutoRefresh();
-        });
-        
-        // 加载日志
-        async function loadLogs() {
-            const container = document.getElementById('logsContainer');
-            const refreshBtn = document.getElementById('refreshBtn');
+        try {
+            const response = await fetch('get_logs.php');
+            const data = await response.json();
             
-            container.innerHTML = `
-                <div class="loading">
-                    <div class="spinner"></div>
-                    <p>正在加载日志...</p>
-                </div>
-            `;
+            // 更新统计信息
+            document.getElementById('total-logs').textContent = data.total || 0;
+            document.getElementById('today-logs').textContent = data.today || 0;
+            document.getElementById('active-users').textContent = data.users || 0;
             
-            refreshBtn.disabled = true;
-            refreshBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 加载中...';
-            
-            try {
-                const response = await fetch('admin.php?ajax=1&action=get_logs');
-                const data = await response.json();
-                
-                if (data.success) {
-                    const showUser = document.getElementById('showUser').checked;
-                    const showBot = document.getElementById('showBot').checked;
-                    const search = document.getElementById('searchInput').value.toLowerCase();
+            if (data.success && data.logs.length > 0) {
+                let html = '';
+                data.logs.forEach((log, index) => {
+                    let messageClass = 'log-message';
+                    let icon = '💬';
+                    let content = log.content;
                     
-                    container.innerHTML = '';
-                    
-                    if (data.logs.length === 0) {
-                        container.innerHTML = `
-                            <div class="log-entry" style="text-align: center; border-color: #d69e2e;">
-                                <i class="fas fa-inbox fa-2x" style="color: #d69e2e;"></i>
-                                <p style="margin-top: 10px; color: #a0aec0;">暂无对话记录</p>
-                            </div>
-                        `;
-                    } else {
-                        data.logs.forEach(log => {
-                            // 过滤
-                            if ((log.type === 'user' && !showUser) || (log.type === 'bot' && !showBot)) {
-                                return;
-                            }
-                            
-                            // 搜索过滤
-                            if (search && !log.message.toLowerCase().includes(search)) {
-                                return;
-                            }
-                            
-                            const entry = document.createElement('div');
-                            entry.className = `log-entry ${log.type}`;
-                            entry.innerHTML = `
-                                <span class="log-time">[${log.time}]</span>
-                                ${escapeHtml(log.message)}
-                            `;
-                            container.appendChild(entry);
-                        });
+                    // 根据内容类型添加不同样式
+                    if (content.includes('用户 @') || content.includes('用户:')) {
+                        messageClass += ' user-message';
+                        icon = '👤';
+                    } else if (content.includes('机器人') || content.includes('收到')) {
+                        messageClass += ' bot-message';
+                        icon = '🤖';
+                    } else if (content.includes('http') || content.includes('链接')) {
+                        messageClass += ' url-message';
+                        icon = '🔗';
+                        // 提取URL并创建链接
+                        const urlMatch = content.match(/(https?:\/\/[^\s]+)/);
+                        if (urlMatch) {
+                            content = content.replace(urlMatch[0], 
+                                `<a href="${urlMatch[0]}" target="_blank" class="url-link">${urlMatch[0]}</a>`);
+                        }
                     }
-                } else {
-                    showError('加载失败: ' + (data.error || '未知错误'));
-                }
-            } catch (error) {
-                showError('网络错误: ' + error.message);
-            } finally {
-                refreshBtn.disabled = false;
-                refreshBtn.innerHTML = '<i class="fas fa-sync-alt"></i> 刷新日志';
-                resetAutoRefresh();
-            }
-        }
-        
-        // 加载统计
-        async function loadStats() {
-            try {
-                const response = await fetch('admin.php?ajax=1&action=get_stats');
-                const data = await response.json();
-                
-                if (data.success) {
-                    document.getElementById('totalMessages').textContent = data.stats.total;
-                    document.getElementById('todayMessages').textContent = data.stats.today;
                     
-                    // 获取日志文件大小
-                    fetch('admin.php?ajax=1&action=get_logs')
-                        .then(res => res.json())
-                        .then(logData => {
-                            const sizeKB = (JSON.stringify(logData).length / 1024).toFixed(2);
-                            document.getElementById('logSize').textContent = sizeKB + ' KB';
-                        });
+                    // 检查是否是JSON数据
+                    const jsonMatch = content.match(/(\{[^}]+\})/);
+                    const hasJson = jsonMatch && content.includes('{') && content.includes('}');
                     
-                    document.getElementById('lastUpdate').textContent = new Date().toLocaleTimeString('zh-CN', {hour: '2-digit', minute:'2-digit'});
-                }
-            } catch (error) {
-                console.error('统计加载失败:', error);
-            }
-        }
-        
-        // 清空日志
-        async function clearLogs() {
-            if (!confirm('⚠️ 确定要清空所有日志吗？此操作不可恢复！')) {
-                return;
-            }
-            
-            try {
-                const response = await fetch('admin.php?ajax=1&action=clear_logs');
-                const data = await response.json();
+                    html += `
+                    <div class="${messageClass}">
+                        <div class="log-time">
+                            <span>${icon}</span>
+                            ${log.time}
+                        </div>
+                        <div class="log-content">${content}</div>
+                        ${hasJson ? `
+                        <button class="json-toggle" onclick="toggleJson(this)">显示JSON详情</button>
+                        <div class="json-content">${formatJson(jsonMatch[0])}</div>
+                        ` : ''}
+                    </div>`;
+                });
                 
-                if (data.success) {
-                    alert('✅ 日志已清空');
-                    loadLogs();
-                    loadStats();
-                } else {
-                    alert('❌ 清空失败');
-                }
-            } catch (error) {
-                alert('❌ 网络错误: ' + error.message);
-            }
-        }
-        
-        // 自动刷新
-        function startAutoRefresh() {
-            updateCountdown();
-            countdownInterval = setInterval(updateCountdown, 1000);
-        }
-        
-        function updateCountdown() {
-            const countdownEl = document.getElementById('countdown');
-            countdownEl.textContent = autoRefreshTimer;
-            
-            if (autoRefreshTimer <= 0) {
-                loadLogs();
-                loadStats();
-                autoRefreshTimer = 30;
+                container.innerHTML = html;
+                
+                // 滚动到底部
+                setTimeout(() => {
+                    container.scrollTop = container.scrollHeight;
+                }, 100);
             } else {
-                autoRefreshTimer--;
+                container.innerHTML = '<div class="empty-logs"><p>暂无日志记录</p></div>';
+            }
+        } catch (error) {
+            container.innerHTML = `<div class="empty-logs"><p>加载失败: ${error.message}</p></div>`;
+        }
+    }
+    
+    function formatJson(jsonString) {
+        try {
+            const json = JSON.parse(jsonString);
+            const prettyJson = JSON.stringify(json, null, 2);
+            
+            // 语法高亮
+            return prettyJson
+                .replace(/(".*?":)/g, '<span class="json-key">$1</span>')
+                .replace(/"(.*?)"/g, '<span class="json-string">"$1"</span>')
+                .replace(/\b(true|false)\b/g, '<span class="json-boolean">$1</span>')
+                .replace(/\b(null)\b/g, '<span class="json-boolean">null</span>')
+                .replace(/\b(\d+)\b/g, '<span class="json-number">$1</span>')
+                .replace(/\n/g, '<br>')
+                .replace(/ /g, '&nbsp;');
+        } catch (e) {
+            return jsonString.replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        }
+    }
+    
+    function toggleJson(button) {
+        const jsonContent = button.nextElementSibling;
+        const isVisible = jsonContent.classList.contains('show');
+        
+        if (isVisible) {
+            jsonContent.classList.remove('show');
+            button.textContent = '显示JSON详情';
+        } else {
+            jsonContent.classList.add('show');
+            button.textContent = '隐藏JSON详情';
+        }
+    }
+    
+    async function clearLogs() {
+        if (confirm('确定要清空所有日志吗？此操作不可撤销！')) {
+            try {
+                const response = await fetch('clear_logs.php');
+                const result = await response.text();
+                alert(result);
+                loadLogs();
+            } catch (error) {
+                alert('清空失败: ' + error.message);
             }
         }
-        
-        function resetAutoRefresh() {
-            autoRefreshTimer = 30;
-            document.getElementById('countdown').textContent = '30';
+    }
+    
+    async function testWebhook() {
+        try {
+            const response = await fetch('webhook.php');
+            const text = await response.text();
+            
+            if (text.includes('Webhook') || text.includes('运行中')) {
+                alert('✅ Webhook运行正常！');
+            } else {
+                alert('⚠️ Webhook可能有问题');
+            }
+        } catch (error) {
+            alert('❌ 测试失败: ' + error.message);
         }
-        
-        // 显示错误
-        function showError(message) {
-            const container = document.getElementById('logsContainer');
-            container.innerHTML = `
-                <div class="log-entry" style="border-color: #e53e3e; background: rgba(229, 62, 62, 0.1);">
-                    <i class="fas fa-exclamation-triangle"></i> ${message}
-                </div>
-            `;
-        }
-        
-        // HTML转义
-        function escapeHtml(text) {
-            const div = document.createElement('div');
-            div.textContent = text;
-            return div.innerHTML;
-        }
+    }
+    
+    function exportLogs() {
+        alert('导出功能开发中...\n\n当前日志文件: telegram_webhook.log\n请通过FTP下载该文件。');
+    }
+    
+    // 页面加载时自动加载
+    document.addEventListener('DOMContentLoaded', () => {
+        loadLogs();
+        // 每10秒自动刷新
+        setInterval(loadLogs, 10000);
+    });
     </script>
 </body>
 </html>
+EOF
+
+# 创建get_logs.php
+cat > get_logs.php << 'EOF'
 <?php
-ob_end_flush();
+header('Content-Type: application/json');
+$log_file = 'telegram_webhook.log';
+
+$response = [
+    'success' => false,
+    'logs' => [],
+    'total' => 0,
+    'today' => 0,
+    'users' => 0
+];
+
+if (file_exists($log_file)) {
+    $lines = file($log_file, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+    
+    // 统计信息
+    $response['total'] = count($lines);
+    $response['today'] = 0;
+    $userSet = [];
+    
+    // 解析最近50条日志
+    $recent_logs = array_slice(array_reverse($lines), 0, 50);
+    
+    foreach ($recent_logs as $line) {
+        // 解析时间戳和内容
+        if (preg_match('/^\[([^\]]+)\]\s*(.+)$/', $line, $matches)) {
+            $time = $matches[1];
+            $content = $matches[2];
+            
+            // 提取用户ID
+            if (preg_match('/用户\s+@?([^\s\(]+)/', $content, $userMatch)) {
+                $userSet[$userMatch[1]] = true;
+            }
+            
+            // 检查是否是今天的消息
+            $today = date('Y-m-d');
+            if (strpos($time, $today) === 0) {
+                $response['today']++;
+            }
+            
+            $response['logs'][] = [
+                'time' => $time,
+                'content' => trim($content)
+            ];
+        }
+    }
+    
+    $response['users'] = count($userSet);
+    $response['success'] = true;
+}
+
+echo json_encode($response, JSON_UNESCAPED_UNICODE);
+?>
+EOF
+
+# 创建clear_logs.php
+cat > clear_logs.php << 'EOF'
+<?php
+$log_file = 'telegram_webhook.log';
+
+if (file_exists($log_file)) {
+    // 只清空，不删除文件
+    file_put_contents($log_file, date('[Y-m-d H:i:s]') . " 日志已清空\n");
+    echo '日志已清空';
+} else {
+    echo '日志文件不存在';
+}
 ?>
 EOF
