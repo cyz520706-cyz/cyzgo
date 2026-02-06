@@ -135,3 +135,71 @@ header('Content-Type: text/html; charset=utf-8');
     ?>
 </body>
 </html>
+<!-- 在admin.php中添加 -->
+<div class="tab" id="users-tab">
+    <h2><i class="fas fa-users"></i> 用户列表</h2>
+    
+    <div class="user-grid">
+        <?php
+        $log_file = 'telegram_webhook.log';
+        $users = [];
+        
+        if (file_exists($log_file)) {
+            $content = file_get_contents($log_file);
+            preg_match_all('/用户ID: (\d+)/', $content, $matches);
+            $unique_users = array_unique($matches[1]);
+            
+            foreach ($unique_users as $user_id) {
+                // 模拟用户信息（实际中可以从消息中提取）
+                echo '
+                <div class="user-card">
+                    <div class="user-avatar">
+                        <i class="fas fa-user-circle"></i>
+                    </div>
+                    <div class="user-info">
+                        <h3>用户 #' . substr($user_id, -4) . '</h3>
+                        <p><small>ID: ' . $user_id . '</small></p>
+                        <p><i class="fas fa-comment"></i> 已发送消息</p>
+                        <a href="?user_id=' . $user_id . '" class="btn-small">查看对话</a>
+                    </div>
+                </div>';
+            }
+        }
+        ?>
+    </div>
+</div>
+
+<style>
+.user-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 15px;
+    margin-top: 20px;
+}
+.user-card {
+    background: white;
+    border: 1px solid #e0e0e0;
+    border-radius: 10px;
+    padding: 15px;
+    transition: transform 0.3s;
+}
+.user-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+}
+.user-avatar {
+    font-size: 48px;
+    color: #667eea;
+    text-align: center;
+    margin-bottom: 10px;
+}
+.btn-small {
+    display: inline-block;
+    padding: 5px 10px;
+    background: #667eea;
+    color: white;
+    border-radius: 4px;
+    text-decoration: none;
+    font-size: 12px;
+}
+</style>
