@@ -38,7 +38,7 @@ function checkSecurity() {
         
         // 基本认证验证（用户名/密码请自行修改）
         $valid_users = [
-            'admin' => password_hash('admin123', PASSWORD_DEFAULT) // 请修改默认密码
+            'admin' => password_hash('$2y$10$o08i5CJo5qoUCFdsJ3tCVO9j85nPwd9xAPyJg4iwqbYvaPfUBqHVq', PASSWORD_DEFAULT) // 请修改默认密码
         ];
         
         if (!isset($valid_users[$_SERVER['PHP_AUTH_USER']]) || 
