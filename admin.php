@@ -1,79 +1,137 @@
 <?php
-echo '<!DOCTYPE html>';
-echo '<html>';
-echo '<head>';
-echo '<meta charset="UTF-8">';
-echo '<title>管理面板</title>';
-echo '<style>';
-echo 'body { font-family: Arial; padding: 20px; background: #f0f2f5; }';
-echo '.container { max-width: 1000px; margin: 0 auto; background: white; padding: 30px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }';
-echo '.log { background: #f9f9f9; padding: 12px; margin: 8px 0; border-left: 4px solid #007bff; }';
-echo '.log-time { color: #666; font-size: 12px; }';
-echo '.btn { background: #007bff; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; margin: 5px; }';
-echo '.btn:hover { background: #0056b3; }';
-echo '.btn-danger { background: #dc3545; }';
-echo '</style>';
-echo '</head>';
-echo '<body>';
-echo '<div class="container">';
-echo '<h1>🤖 中蒙代购机器人 - 管理面板</h1>';
-// 检查日志文件
-$log_file = 'telegram_webhook.log';
-echo '<p><strong>日志状态:</strong> ';
-if (file_exists($log_file)) {
-    $size = filesize($log_file);
-    $lines = count(file($log_file, FILE_SKIP_EMPTY_LINES));
-    echo "存在 | 大小: " . round($size/1024, 2) . " KB | 行数: $lines";
-} else {
-    echo '不存在';
-}
-echo '</p>';
-echo '<div>';
-echo '<button class="btn" onclick="loadLogs()">🔄 刷新日志</button>';
-echo '<button class="btn btn-danger" onclick="clearLogs()">🗑️ 清空日志</button>';
-echo '<button class="btn" onclick="testAPI()">🔧 测试API</button>';
-echo '</div>';
-echo '<h3>📝 对话日志</h3>';
-echo '<div id="logs">正在加载...</div>';
-echo '</div>'; // container结束
-echo '<script>';
-echo 'async function loadLogs() {';
-echo '  try {';
-echo '    const response = await fetch("admin_logs.php");';
-echo '    const data = await response.json();';
-echo '    if (data.success) {';
-echo '      let html = "";';
-echo '      data.logs.forEach(log => {';
-echo '        html += `<div class="log"><span class="log-time">[\${log.time}]</span> \${log.message}</div>`;';
-echo '      });';
-echo '      if (data.logs.length === 0) {';
-echo '        html = "<p>暂无日志记录</p>";';
-echo '      }';
-echo '      document.getElementById("logs").innerHTML = html;';
-echo '    }';
-echo '  } catch (error) {';
-echo '    document.getElementById("logs").innerHTML = "<p>错误: " + error.message + "</p>";';
-echo '  }';
-echo '}';
-echo 'async function clearLogs() {';
-echo '  if (confirm("确定要清空所有日志吗？")) {';
-echo '    const response = await fetch("admin_logs.php?action=clear");';
-echo '    const data = await response.json();';
-echo '    alert(data.message || "已清空");';
-echo '    loadLogs();';
-echo '  }';
-echo '}';
-echo 'async function testAPI() {';
-echo '  const response = await fetch("api.php");';
-echo '  const data = await response.json();';
-echo '  alert("API状态: " + data.status + "\\n时间: " + data.time);';
-echo '}';
-echo '// 页面加载时自动加载日志';
-echo 'window.onload = loadLogs;';
-echo '// 每30秒自动刷新';
-echo 'setInterval(loadLogs, 30000);';
-echo '</script>';
-echo '</body>';
-echo '</html>';
+// admin.php - 对话管理面板
+header('Content-Type: text/html; charset=utf-8');
 ?>
-EOF
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>中蒙代购机器人 - 对话管理</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .log-entry { 
+            background: #f5f5f5; 
+            margin: 10px 0; 
+            padding: 10px; 
+            border-radius: 5px;
+            border-left: 4px solid #2196F3;
+        }
+        .user-info { color: #2196F3; font-weight: bold; }
+        .message { margin: 5px 0; }
+        .timestamp { color: #666; font-size: 12px; }
+        .action-bar { margin: 20px 0; }
+        button { padding: 10px 20px; background: #2196F3; color: white; border: none; border-radius: 5px; cursor: pointer; }
+        button:hover { background: #1976D2; }
+    </style>
+</head>
+<body>
+    <h1>🤖 中蒙代购机器人对话日志</h1>
+    
+    <div class="action-bar">
+        <button onclick="location.reload()">🔄 刷新日志</button>
+        <button onclick="clearLogs()">🗑️ 清空日志</button>
+        <button onclick="downloadLogs()">📥 下载日志</button>
+        <button onclick="location.href='https://dashboard.render.com/cyzgo/logs'" target="_blank">📊 Render实时日志</button>
+    </div>
+    
+    <div id="log-container">
+        <h3>最近对话记录：</h3>
+        <?php
+        $log_file = 'telegram_webhook.log';
+        if (file_exists($log_file)) {
+            $lines = file($log_file, FILE_IGNORE_NEW_LINES);
+            $lines = array_reverse($lines); // 最新的在前面
+            $count = 0;
+            
+            foreach ($lines as $line) {
+                if ($count >= 50) break; // 只显示最近50条
+                
+                echo "<div class='log-entry'>";
+                echo "<div class='timestamp'>" . substr($line, 0, 19) . "</div>";
+                
+                // 高亮用户信息
+                if (strpos($line, '用户ID:') !== false) {
+                    echo "<div class='user-info'>" . 
+                         str_replace(
+                             ['用户ID:', '用户名:', '姓名:', '消息:'], 
+                             ['👤 用户ID:', '@', '👤 姓名:', '💬 消息:'], 
+                             $line
+                         ) . 
+                         "</div>";
+                } else {
+                    echo "<div class='message'>" . htmlspecialchars($line) . "</div>";
+                }
+                
+                echo "</div>";
+                $count++;
+            }
+        } else {
+            echo "<p>暂无对话记录</p>";
+        }
+        ?>
+    </div>
+    
+    <script>
+        function clearLogs() {
+            if (confirm('确定要清空所有对话记录吗？')) {
+                fetch('?action=clear')
+                    .then(response => response.text())
+                    .then(() => location.reload());
+            }
+        }
+        
+        function downloadLogs() {
+            window.open('?action=download', '_blank');
+        }
+        
+        // 每30秒自动刷新
+        setInterval(() => {
+            fetch('?action=checkUpdate')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.updated) {
+                        location.reload();
+                    }
+                });
+        }, 30000);
+    </script>
+    
+    <?php
+    // 处理操作
+    if (isset($_GET['action'])) {
+        switch ($_GET['action']) {
+            case 'clear':
+                file_put_contents($log_file, '');
+                echo "日志已清空";
+                exit;
+                
+            case 'download':
+                header('Content-Type: text/plain');
+                header('Content-Disposition: attachment; filename="telegram_dialogs_' . date('Ymd') . '.log"');
+                readfile($log_file);
+                exit;
+                
+            case 'checkUpdate':
+                $last_modified = file_exists($log_file) ? filemtime($log_file) : 0;
+                echo json_encode(['updated' => (time() - $last_modified < 10)]);
+                exit;
+        }
+    }
+    ?>
+    
+    <hr>
+    <p><strong>统计信息：</strong></p>
+    <?php
+    if (file_exists($log_file)) {
+        $content = file_get_contents($log_file);
+        $total_lines = substr_count($content, "\n");
+        $user_count = count(array_unique(preg_match_all('/用户ID: (\d+)/', $content, $matches) ? $matches[1] : []));
+        
+        echo "<p>📊 总对话数: " . $total_lines . " 条</p>";
+        echo "<p>👥 总用户数: " . $user_count . " 人</p>";
+        echo "<p>⏰ 日志最后更新: " . date('Y-m-d H:i:s', filemtime($log_file)) . "</p>";
+    }
+    ?>
+</body>
+</html>
