@@ -1,5 +1,5 @@
 <?php
-// admin.php - 完整版本包含对话和订单管理
+// admin.php - 修复querySingle()方法
 
 // 开启错误报告
 error_reporting(E_ALL);
@@ -163,6 +163,31 @@ class LogDB {
         }
         
         return $stmt->execute();
+    }
+
+    // ✅ 添加 querySingle() 方法
+    public function querySingle(string $sql, array $params = []): mixed {
+        if (empty($params)) {
+            return $this->db->querySingle($sql);
+        }
+        
+        $stmt = $this->db->prepare($sql);
+        if (!$stmt) {
+            return false;
+        }
+        
+        $i = 1;
+        foreach ($params as $param) {
+            $stmt->bindValue($i++, $param, SQLITE3_TEXT);
+        }
+        
+        $result = $stmt->execute();
+        if ($result) {
+            $row = $result->fetchArray(SQLITE3_NUM);
+            return $row ? $row[0] : null;
+        }
+        
+        return null;
     }
 
     public function exec(string $sql): bool {
@@ -344,7 +369,6 @@ if ($currentPage === 'dashboard') {
     $res = $logDB->query('SELECT * FROM conversations ORDER BY timestamp DESC LIMIT 5');
     echo '<div class="conversation">';
     while ($row = $res->fetchArray(SQLITE3_ASSOC)) {
-        $metadata = json_decode($row['metadata'], true);
         echo '<div class="message ' . $row['sender'] . '">
             <div class="message-meta">' . $row['sender'] . ' • ' . $row['timestamp'] . ' • ' . $row['session_id'] . '</div>
             <div>' . htmlspecialchars($row['message']) . '</div>
