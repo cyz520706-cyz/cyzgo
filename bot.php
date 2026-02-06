@@ -1,10 +1,10 @@
 <?php
 // ==============================
-// Telegram Bot Webhook 修复版
-// 解决405 Method Not Allowed错误
+// Telegram Bot Webhook 专业版
+// 修复：第113行未闭合的"["
 // ==============================
 
-// 1. 允许所有请求方法（解决405错误）
+// 1. 允许所有请求方法
 if (isset($_SERVER['REQUEST_METHOD']) && $_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     header('Access-Control-Allow-Origin: *');
     header('Access-Control-Allow-Methods: POST, GET, OPTIONS');
@@ -14,105 +14,131 @@ if (isset($_SERVER['REQUEST_METHOD']) && $_SERVER['REQUEST_METHOD'] === 'OPTIONS
     exit(200);
 }
 
-// 2. 设置响应头
-header('Content-Type: application/json');
+// 2. 显示错误（便于调试）
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
+error_reporting(E_ALL);
+
+// 3. 设置响应头
+header('Content-Type: text/plain');
 header('Access-Control-Allow-Origin: *');
 header('Access-Control-Allow-Methods: POST, GET, OPTIONS');
 header('Access-Control-Allow-Headers: Content-Type');
-header('Access-Control-Max-Age: 86400');
 
-// 3. 验证Token（从环境变量或配置文件读取）
-$BOT_TOKEN = '8345582227:AAFFozVMJsNEHPOcXddO0id1L4c_KKxxJsI'; // 替换为你的真实Token
+// 4. 你的Bot Token（请修改这里！）
+$BOT_TOKEN = '8345582227:AAFFozVMJsNEHPOcXddO0id1L4c_KKxxJsI';
+// 例如：$BOT_TOKEN = '1234567890:ABCdefGHijklmnopQRSTUVwxyz';
+
 if (empty($BOT_TOKEN)) {
     http_response_code(500);
-    echo json_encode(['error' => 'BOT_TOKEN not configured']);
+    echo 'BOT_TOKEN not configured';
     exit;
 }
 
-// 4. 记录日志（用于调试）
-$log_data = [
-    'time' => date('Y-m-d H:i:s'),
-    'method' => $_SERVER['REQUEST_METHOD'] ?? 'UNKNOWN',
-    'ip' => $_SERVER['REMOTE_ADDR'] ?? 'unknown',
-    'query' => $_SERVER['QUERY_STRING'] ?? '',
-    'user_agent' => $_SERVER['HTTP_USER_AGENT'] ?? '',
-];
+// 5. 记录每次访问
+$log_entry = date('Y-m-d H:i:s') . " | " . 
+             ($_SERVER['REQUEST_METHOD'] ?? 'UNKNOWN') . " | " . 
+             ($_SERVER['REMOTE_ADDR'] ?? 'unknown') . "\n";
 
-// 5. 处理GET请求（直接访问测试）
+file_put_contents('access.log', $log_entry, FILE_APPEND);
+
+// 6. 处理GET请求（直接测试访问）
 if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'GET' && empty(file_get_contents('php://input'))) {
+    header('Content-Type: application/json');
     echo json_encode([
         'status' => 'Telegram Bot is running',
-        'platform' => 'chinashop.de5.net',
-        'token_exists' => !empty($BOT_TOKEN),
-        'webhook_info' => true,
-        'log' => $log_data,
-        'bot_test' => 'Send /start to test',
-        'webhook_url' => 'https://api.telegram.org/bot' . substr($BOT_TOKEN, 0, 10) . '***/getWebhookInfo',
+        'bot' => substr($BOT_TOKEN, 0, 10) . '***',
+        'last_error' => 'none',
+        'webhook_info' => 'https://api.telegram.org/bot' . substr($BOT_TOKEN, 0, 10) . '***/getWebhookInfo',
+        'set_webhook_url' => 'https://api.telegram.org/bot' . $BOT_TOKEN . '/setWebhook?url=https://chinashop.de5.net/bot.php',
+        'test_bot' => 'Send /start to ' . substr($BOT_TOKEN, 0, 10) . '***'
     ], JSON_PRETTY_PRINT);
     exit;
 }
 
-// 6. 处理Telegram Webhook POST请求
+// 7. 处理Telegram Webhook请求
 $input = file_get_contents('php://input');
 $update = json_decode($input, true);
 
-if (empty($input) || empty($update)) {
-    // 不是Telegram的有效请求
+if (empty($input)) {
+    // 空请求，直接返回OK（重要！）
     http_response_code(200);
     echo 'OK';
     exit;
 }
 
-// 7. 记录Telegram消息
-$log_data['update_id'] = $update['update_id'] ?? 'none';
-$log_data['message'] = $update['message']['text'] ?? 'no text';
-$log_data['chat_id'] = $update['message']['chat']['id'] ?? 'none';
+// 8. 记录Telegram消息
+file_put_contents('telegram.log', $input . "\n\n", FILE_APPEND);
 
-// 保存日志
-file_put_contents('telegram_webhook.log', json_encode($log_data, JSON_PRETTY_PRINT) . PHP_EOL, FILE_APPEND);
-
-// 8. 处理机器人逻辑
+// 9. 处理消息（这是你之前出错的地方 - 第113行）
 if (isset($update['message'])) {
     $chat_id = $update['message']['chat']['id'];
     $text = $update['message']['text'] ?? '';
     $first_name = $update['message']['chat']['first_name'] ?? '朋友';
     
-    // 响应消息
-    $response_text = match (true) {
-        str_starts_with($text, '/start') => "🎉 欢迎 $first_name！\n\n" .
-                                          "我是中蒙代购机器人\n\n" .
-                                          "📦 请发送商品链接或图片询价\n" .
-                                          "💬 客服在线时间：9:00-22:00",
-        
-        str_starts_with($text, '/help') => "🆘 帮助信息\n\n" .
-                                          "1. 直接发送链接\n" .
-                                          "2. 描述商品信息\n" .
-                                          "3. 联系我们：@客服用户名",
-        
-        str_starts_with($text, '/ping') => "🏓 Pong!\n" .
-                                          "服务器正常\n" .
-                                          "时间：" . date('Y-m-d H:i:s'),
-        
-        empty($text) => "请发送文字、链接或图片",
-        
-        default => "📦 收到询价：\n\n" . 
-                   htmlspecialchars(substr($text, 0, 200)) . "\n\n" .
-                   "✅ 已收到，客服稍后回复您"
-    };
+    // 修复：使用条件判断代替match（兼容性更好）
+    if (str_starts_with($text, '/start')) {
+        $response_text = "🎉 欢迎 $first_name！\n\n" .
+                        "我是中蒙代购机器人\n\n" .
+                        "📦 请发送商品链接或图片询价\n" .
+                        "💬 客服在线时间：9:00-22:00\n\n" .
+                        "试试命令：\n" .
+                        "/help - 帮助信息\n" .
+                        "/ping - 测试机器人";
+    } elseif (str_starts_with($text, '/help')) {
+        $response_text = "🆘 帮助信息\n\n" .
+                        "1. 直接发送淘宝/京东链接\n" .
+                        "2. 描述商品信息（尺寸/颜色）\n" .
+                        "3. 发送图片参考\n\n" .
+                        "📞 联系我们：@客服账号\n" .
+                        "⏰ 工作时间：每天9:00-22:00";
+    } elseif (str_starts_with($text, '/ping')) {
+        $response_text = "🏓 Pong！\n" .
+                        "服务器正常\n" .
+                        "北京时间：" . date('Y-m-d H:i:s');
+    } elseif (empty($text)) {
+        $response_text = "🤖 请发送文字消息、商品链接或图片";
+    } else {
+        $response_text = "📦 收到询价：\n\n" . 
+                        htmlspecialchars(substr($text, 0, 200)) . "\n\n" .
+                        "✅ 已收到，客服稍后回复您\n" .
+                        "⏰ 预计回复时间：24小时内";
+    }
     
-    // 9. 发送消息回Telegram
+    // 10. 发送回复给Telegram
     $api_url = "https://api.telegram.org/bot{$BOT_TOKEN}/sendMessage";
     $post_data = [
         'chat_id' => $chat_id,
         'text' => $response_text,
-        'parse_mode' => 'HTML',
+        'parse_mode' => 'HTML'
     ];
     
-    // 使用cURL发送
+    // 使用curl发送
     $ch = curl_init();
     curl_setopt_array($ch, [
         CURLOPT_URL => $api_url,
         CURLOPT_RETURNTRANSFER => true,
         CURLOPT_POST => true,
         CURLOPT_POSTFIELDS => http_build_query($post_data),
-        CURLOPT_TIME
+        CURLOPT_TIMEOUT => 5,
+        CURLOPT_HTTPHEADER => ['Content-Type: application/x-www-form-urlencoded']
+    ]);
+    
+    $result = curl_exec($ch);
+    $http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    curl_close($ch);
+    
+    // 记录发送结果
+    $send_log = date('Y-m-d H:i:s') . " | Chat: $chat_id | HTTP: $http_code\n";
+    file_put_contents('send.log', $send_log, FILE_APPEND);
+    
+    // 记录详细结果（调试用）
+    if ($result) {
+        file_put_contents('telegram_response.log', $result . "\n\n", FILE_APPEND);
+    }
+}
+
+// 11. 必须返回OK给Telegram
+http_response_code(200);
+echo 'OK';
+?>
