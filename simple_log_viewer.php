@@ -20,6 +20,3 @@ if (file_exists($log_file)) {
 </body>
 </html>
 EOF
-
-echo "✅ 最简日志查看器: simple_log_viewer.php"
-echo "立即访问: https://cyzgo.onrender.com/simple_log_viewer.php"
