@@ -1,6 +1,27 @@
 <?php
 session_start();
-
+// ------------------- 1️⃣ 关键常量 -------------------
+if (!defined('LOG_DB_PATH')) {
+    // 这里使用 /tmp 目录，容器重启会清空，仅供测试
+    define('LOG_DB_PATH', '/tmp/logs.db');
+}
+// ------------------- 2️⃣ 兼容的登录表单函数 -------------------
+function showLoginForm() {
+    // 下面的 HTML 与之前给出的相同，下面省略，保留原始内容
+    // （请把之前的 showLoginForm() 实现粘回来）
+}
+// ------------------- 3️⃣ 简化的安全检查 -------------------
+function checkSecurity() {
+    if (!isset($_SESSION['admin_logged_in'])) {
+        if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['login_token'] ?? '') === 'valid') {
+            $_SESSION['admin_logged_in'] = true;
+        } else {
+            showLoginForm();
+            exit;
+        }
+    }
+}
+checkSecurity();   // ← 记得调用一次
 // 临时简化验证（仅用于测试）
 function checkSecurity() {
     // 直接放行，不再做Basic-Auth验证
