@@ -26,7 +26,7 @@ header('Access-Control-Allow-Methods: POST, GET, OPTIONS');
 header('Access-Control-Allow-Headers: Content-Type');
 
 // 4. 你的Bot Token（请修改这里！）
-$BOT_TOKEN = '8345582227:AAFFozVMJsNEHPOcXddO0id1L4c_KKxxJsI';
+$BOT_TOKEN = '';
 // 例如：$BOT_TOKEN = '1234567890:ABCdefGHijklmnopQRSTUVwxyz';
 
 if (empty($BOT_TOKEN)) {
